@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "586386636592",
+    "project_id": "reach-muslim-leads",
+    "storage_bucket": "reach-muslim-leads.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:586386636592:android:f16b3f846aa31d534592f5",
+        "android_client_info": {
+          "package_name": "com.example.reachmuslim"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDtStdc-uUhewQ7hmTPwVuMFdSzSdVbXR4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

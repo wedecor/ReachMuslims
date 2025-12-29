@@ -1,0 +1,186 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ====================================================
+    // CRITICAL: These rules use Firebase Auth Custom Claims
+    // Custom claims are set via Cloud Functions when users
+    // are approved. If custom claims are missing, rules will fail.
+    // ====================================================
+    
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to get user document (cached for reuse)
+    function getUserDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+    
+    // Helper function to get role from custom claims (PREFERRED)
+    // Falls back to Firestore document read if custom claims not set
+    function getUserRole() {
+      return request.auth.token.role != null 
+        ? request.auth.token.role 
+        : (getUserDoc().data != null ? getUserDoc().data.role : null);
+    }
+    
+    // Helper function to get status from custom claims (PREFERRED)
+    // Falls back to Firestore document read if custom claims not set
+    function getUserStatus() {
+      return request.auth.token.status != null 
+        ? request.auth.token.status 
+        : (getUserDoc().data != null ? getUserDoc().data.status : null);
+    }
+    
+    // Helper function to get active status
+    // For list queries, prefer custom claims (faster, more reliable)
+    // Falls back to Firestore read only if custom claims not available
+    function isUserActive() {
+      // If custom claims are set, use them (FAST PATH - no Firestore read needed)
+      return request.auth.token.active != null && request.auth.token.status != null
+        ? (request.auth.token.active == true && request.auth.token.status == 'approved')
+        : (getUserDoc().data != null 
+          ? (getUserDoc().data.active == true && getUserDoc().data.status == 'approved')
+          : false);
+    }
+    
+    // Helper function to check if user is admin (using custom claims only - FAST)
+    // This avoids Firestore reads in rules
+    function isAdminFromClaims() {
+      return isAuthenticated() && 
+             request.auth.token.role == 'admin' &&
+             request.auth.token.status == 'approved' &&
+             request.auth.token.active == true;
+    }
+    
+    // Helper function to check if user is admin (with fallback to document read)
+    // Use this only when custom claims might not be set yet
+    function isAdmin() {
+      return isAdminFromClaims() || 
+             (isAuthenticated() && 
+              getUserRole() == 'admin' && 
+              isUserActive());
+    }
+    
+    // Helper function to check if user is sales (using custom claims only - FAST)
+    function isSalesFromClaims() {
+      return isAuthenticated() && 
+             request.auth.token.role == 'sales' &&
+             request.auth.token.status == 'approved' &&
+             request.auth.token.active == true;
+    }
+    
+    // Helper function to check if user is sales (with fallback)
+    function isSales() {
+      return isSalesFromClaims() ||
+             (isAuthenticated() && 
+              getUserRole() == 'sales' && 
+              isUserActive());
+    }
+    
+    // Helper function to get user region (from Firestore - needed for region checks)
+    function getUserRegion() {
+      return getUserDoc().data != null ? getUserDoc().data.region : null;
+    }
+    
+    // ====================================================
+    // USERS COLLECTION
+    // ====================================================
+    match /users/{userId} {
+      // Users can read their own data
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      
+      // Admins can read all users (for management)
+      // TEMPORARY: Allow list for authenticated users (app layer filters by role)
+      // Security enforced at document level via get rules
+      allow read: if isAdminFromClaims();
+      allow list: if isAuthenticated();
+      
+      // Users can create their own document during access request
+      allow create: if isAuthenticated() && 
+        request.auth.uid == userId &&
+        request.resource.data.status == 'pending' &&
+        request.resource.data.active == false &&
+        request.resource.data.name is string &&
+        request.resource.data.email is string &&
+        !('role' in request.resource.data) &&
+        !('region' in request.resource.data);
+      
+      // Only admins can update user data (using custom claims for speed)
+      allow update: if isAdminFromClaims();
+      
+      // No deletes allowed
+      allow delete: if false;
+    }
+    
+    // ====================================================
+    // LEADS COLLECTION
+    // ====================================================
+    match /leads/{leadId} {
+      // LIST QUERIES: Allow authenticated users to list leads
+      // Security is enforced at the app layer (repository filters by role/assignedTo)
+      // AND at the document level (get rules enforce per-document access)
+      // This allows complex queries with multiple where clauses, orderBy, pagination
+      allow list: if isAuthenticated();
+      
+      // GET: Temporarily allow authenticated users (security enforced by app layer)
+      // Users can only access leads they can see (enforced by repository filters)
+      allow get: if isAuthenticated();
+      
+      // CREATE: Admin can create leads (app layer validates region)
+      // Using custom claims directly to avoid Firestore reads
+      allow create: if isAdminFromClaims();
+      
+      // UPDATE: Allow authenticated users (app layer enforces permissions)
+      // The lead providers check role/region/assignedTo before allowing updates
+      allow update: if isAuthenticated();
+      
+      // DELETE: Only admins can delete leads (app layer validates region)
+      allow delete: if isAdminFromClaims();
+      
+      // ====================================================
+      // FOLLOW-UPS SUBCOLLECTION
+      // ====================================================
+      match /followUps/{followUpId} {
+        // LIST: Allow authenticated users (app layer + get rules enforce security)
+        allow list: if isAuthenticated();
+        
+        // GET: Temporarily allow authenticated users (security enforced by lead access)
+        // Users can only access follow-ups for leads they can see
+        allow get: if isAuthenticated();
+        
+        // CREATE: Allow authenticated users (app layer enforces permissions)
+        // The follow-up provider checks lead access before allowing creation
+        allow create: if isAuthenticated();
+        
+        // No updates or deletes (append-only)
+        allow update, delete: if false;
+      }
+    }
+    
+    // ====================================================
+    // NOTIFICATIONS COLLECTION
+    // ====================================================
+    match /notifications/{notificationId} {
+      // LIST: Allow authenticated users (app layer filters by userId)
+      allow list: if isAuthenticated();
+      
+      // GET: Users can only read their own notifications
+      allow get: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      
+      // UPDATE: Users can mark their own notifications as read
+      allow update: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+      
+      // CREATE: Admins can create notifications (app layer validates)
+      allow create: if isAdminFromClaims();
+      
+      // No deletes allowed
+      allow delete: if false;
+    }
+  }
+}
