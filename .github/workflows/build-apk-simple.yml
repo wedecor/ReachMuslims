@@ -6,6 +6,10 @@ on:
       - main
   workflow_dispatch: # Allows manual trigger from GitHub UI
 
+permissions:
+  contents: read
+  id-token: write # Required for Workload Identity Federation
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -29,14 +33,17 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
       - name: Build APK
         run: flutter build apk --release
-
-      - name: Setup Google Cloud SDK
-        uses: google-github-actions/setup-gcloud@v2
-        with:
-          service_account_key: ${{ secrets.GCP_SA_KEY }}
-          project_id: reach-muslim-leads
 
       - name: Get version and timestamp
         id: apk-info
@@ -67,4 +74,3 @@ jobs:
           echo ""
           echo "::notice::Versioned APK: ${{ steps.apk-info.outputs.download_url }}"
           echo "::notice::Latest APK: https://storage.googleapis.com/reach-muslim-leads.appspot.com/apk/latest.apk"
-
