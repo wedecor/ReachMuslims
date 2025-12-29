@@ -6,6 +6,31 @@
   "storage": {
     "rules": "storage.rules"
   },
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ],
+    "headers": [
+      {
+        "source": "**/*.@(js|css|wasm|woff|woff2)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "max-age=31536000"
+          }
+        ]
+      }
+    ]
+  },
   "functions": [
     {
       "source": "functions",
@@ -32,12 +57,20 @@
           "fileOutput": "android/app/google-services.json"
         }
       },
+      "ios": {
+        "default": {
+          "projectId": "reach-muslim-leads",
+          "appId": "PLACEHOLDER_IOS_APP_ID",
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
+        }
+      },
       "dart": {
         "lib/firebase_options.dart": {
           "projectId": "reach-muslim-leads",
           "configurations": {
             "android": "1:586386636592:android:f16b3f846aa31d534592f5",
-            "web": "1:586386636592:web:4be4cb2af65c78e74592f5"
+            "web": "1:586386636592:web:4be4cb2af65c78e74592f5",
+            "ios": "PLACEHOLDER_IOS_APP_ID"
           }
         }
       }

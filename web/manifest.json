@@ -1,11 +1,11 @@
 {
-    "name": "reachmuslim",
-    "short_name": "reachmuslim",
+  "name": "Reach Muslim Lead Management",
+  "short_name": "Reach Muslim",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "Lead management app for Reach Muslim matrimony platform. Manage leads, follow-ups, and conversions.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
