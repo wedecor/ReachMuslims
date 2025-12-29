@@ -1,0 +1,70 @@
+name: Build and Deploy APK (Simple)
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: # Allows manual trigger from GitHub UI
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build APK
+        run: flutter build apk --release
+
+      - name: Setup Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          project_id: reach-muslim-leads
+
+      - name: Get version and timestamp
+        id: apk-info
+        run: |
+          VERSION_NAME=$(grep "version:" pubspec.yaml | sed 's/version: //' | sed 's/\+.*//')
+          VERSION_CODE=$(grep "version:" pubspec.yaml | sed 's/.*+//')
+          TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+          APK_NAME="reachmuslim_v${VERSION_NAME}_${VERSION_CODE}_${TIMESTAMP}.apk"
+          echo "apk_name=$APK_NAME" >> $GITHUB_OUTPUT
+          echo "download_url=https://storage.googleapis.com/reach-muslim-leads.appspot.com/apk/$APK_NAME" >> $GITHUB_OUTPUT
+
+      - name: Upload APK to Firebase Storage
+        run: |
+          gsutil cp build/app/outputs/flutter-apk/app-release.apk gs://reach-muslim-leads.appspot.com/apk/${{ steps.apk-info.outputs.apk_name }}
+          gsutil acl ch -u AllUsers:R gs://reach-muslim-leads.appspot.com/apk/${{ steps.apk-info.outputs.apk_name }}
+
+      - name: Create latest symlink
+        run: |
+          gsutil cp build/app/outputs/flutter-apk/app-release.apk gs://reach-muslim-leads.appspot.com/apk/latest.apk
+          gsutil acl ch -u AllUsers:R gs://reach-muslim-leads.appspot.com/apk/latest.apk
+
+      - name: Output download URLs
+        run: |
+          echo "✅ APK deployed successfully!"
+          echo ""
+          echo "📱 Versioned APK: ${{ steps.apk-info.outputs.download_url }}"
+          echo "📱 Latest APK: https://storage.googleapis.com/reach-muslim-leads.appspot.com/apk/latest.apk"
+          echo ""
+          echo "::notice::Versioned APK: ${{ steps.apk-info.outputs.download_url }}"
+          echo "::notice::Latest APK: https://storage.googleapis.com/reach-muslim-leads.appspot.com/apk/latest.apk"
+

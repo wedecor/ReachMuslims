@@ -1,0 +1,62 @@
+name: Build and Deploy APK
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  workflow_dispatch: # Allows manual trigger
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Setup Firebase CLI
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
+
+      - name: Build APK
+        run: flutter build apk --release
+
+      - name: Get version info
+        id: version
+        run: |
+          VERSION_NAME=$(grep "version:" pubspec.yaml | sed 's/version: //' | sed 's/\+.*//')
+          VERSION_CODE=$(grep "version:" pubspec.yaml | sed 's/.*+//')
+          echo "version_name=$VERSION_NAME" >> $GITHUB_OUTPUT
+          echo "version_code=$VERSION_CODE" >> $GITHUB_OUTPUT
+          echo "APK_NAME=reachmuslim_v${VERSION_NAME}_${VERSION_CODE}_$(date +%Y%m%d_%H%M%S).apk" >> $GITHUB_OUTPUT
+
+      - name: Upload to Firebase Storage
+        run: |
+          gsutil cp build/app/outputs/flutter-apk/app-release.apk gs://reach-muslim-leads.appspot.com/apk/${{ steps.version.outputs.APK_NAME }}
+          gsutil acl ch -u AllUsers:R gs://reach-muslim-leads.appspot.com/apk/${{ steps.version.outputs.APK_NAME }}
+
+      - name: Output download URL
+        run: |
+          echo "✅ APK deployed successfully!"
+          echo "📱 Download URL: https://storage.googleapis.com/reach-muslim-leads.appspot.com/apk/${{ steps.version.outputs.APK_NAME }}"
+          echo "::notice::APK Download URL: https://storage.googleapis.com/reach-muslim-leads.appspot.com/apk/${{ steps.version.outputs.APK_NAME }}"
+
