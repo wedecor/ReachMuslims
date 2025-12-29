@@ -1,0 +1,38 @@
+// Gradle init script to retry failed dependency downloads
+allprojects {
+    buildscript {
+        repositories {
+            // Try Google first, then Maven Central
+            google()
+            mavenCentral()
+        }
+    }
+    
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+// Configure HTTP retry for dependency resolution
+gradle.projectsLoaded {
+    rootProject.allprojects {
+        buildscript.configurations.all {
+            resolutionStrategy {
+                retry {
+                    maxRetries = 5
+                    maxFailures = 10
+                }
+            }
+        }
+        configurations.all {
+            resolutionStrategy {
+                retry {
+                    maxRetries = 5
+                    maxFailures = 10
+                }
+            }
+        }
+    }
+}
+

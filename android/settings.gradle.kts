@@ -12,8 +12,17 @@ pluginManagement {
 
     repositories {
         google()
-        mavenCentral()
+        mavenCentral {
+            content {
+                // Prefer Google's mirror for better reliability
+                includeGroupByRegex(".*")
+            }
+        }
+        // Add alternative repositories as fallback
         gradlePluginPortal()
+        maven {
+            url = uri("https://repo1.maven.org/maven2/")
+        }
     }
 }
 

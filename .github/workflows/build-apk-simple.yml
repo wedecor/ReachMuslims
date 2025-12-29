@@ -73,8 +73,27 @@ jobs:
             fi
           fi
 
-      - name: Build APK
-        run: flutter build apk --release
+      - name: Build APK (with retry)
+        run: |
+          MAX_RETRIES=3
+          RETRY_COUNT=0
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            echo "🔄 Build attempt $((RETRY_COUNT + 1)) of $MAX_RETRIES"
+            if flutter build apk --release; then
+              echo "✅ Build successful!"
+              exit 0
+            else
+              RETRY_COUNT=$((RETRY_COUNT + 1))
+              if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+                echo "⚠️  Build failed, cleaning and retrying in 10 seconds..."
+                flutter clean
+                sleep 10
+              else
+                echo "❌ Build failed after $MAX_RETRIES attempts"
+                exit 1
+              fi
+            fi
+          done
 
       - name: Get version and timestamp
         id: apk-info

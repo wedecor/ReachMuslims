@@ -1,7 +1,15 @@
 allprojects {
     repositories {
         google()
-        mavenCentral()
+        mavenCentral {
+            content {
+                includeGroupByRegex(".*")
+            }
+        }
+        // Add alternative Maven repository as fallback
+        maven {
+            url = uri("https://repo1.maven.org/maven2/")
+        }
     }
 }
 
