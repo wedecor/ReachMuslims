@@ -42,20 +42,24 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
-      - name: Ensure Storage bucket exists
+      - name: Verify Storage bucket exists
         run: |
           # Check if bucket exists
           if gsutil ls -b gs://reach-muslim-leads.appspot.com 2>/dev/null; then
             echo "✅ Storage bucket exists"
           else
-            echo "⚠️  Storage bucket not found. Attempting to create..."
-            # Try to create the bucket (may fail if Storage API not enabled)
-            gsutil mb -p reach-muslim-leads -l us-central1 gs://reach-muslim-leads.appspot.com || {
-              echo "❌ Failed to create bucket. Please enable Firebase Storage in Firebase Console:"
-              echo "   https://console.firebase.google.com/project/reach-muslim-leads/storage"
-              exit 1
-            }
-            echo "✅ Storage bucket created"
+            echo "❌ Storage bucket not found!"
+            echo ""
+            echo "The Firebase Storage bucket must be created by enabling Firebase Storage in the console."
+            echo "Please follow these steps:"
+            echo "1. Go to: https://console.firebase.google.com/project/reach-muslim-leads/storage"
+            echo "2. Click 'Get started' (if Storage is not enabled)"
+            echo "3. Choose 'Start in production mode' or 'Start in test mode'"
+            echo "4. Select a location (e.g., us-central1)"
+            echo "5. Click 'Done'"
+            echo ""
+            echo "This will automatically create the bucket: gs://reach-muslim-leads.appspot.com"
+            exit 1
           fi
 
       - name: Build APK
