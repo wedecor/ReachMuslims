@@ -388,7 +388,7 @@ class _PendingAccessRequestsScreenState extends ConsumerState<PendingAccessReque
         await notificationRepository.createNotification(
           userId: user.uid,
           title: 'Access Approved',
-          body: 'Your ReachMuslim lead portal access has been approved.',
+          body: 'Your Reach Muslim lead portal access has been approved.',
         );
       } catch (e) {
         // Log but don't fail approval

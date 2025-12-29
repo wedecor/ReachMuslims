@@ -22,7 +22,7 @@ class AboutScreen extends ConsumerWidget {
             const SizedBox(height: 24),
             // App Name
             Text(
-              'Lead Management',
+              'Reach Muslim',
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -57,7 +57,7 @@ class AboutScreen extends ConsumerWidget {
             // Footer
             Center(
               child: Text(
-                '© 2024 Lead Management App',
+                '© 2024 Reach Muslim',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Colors.grey[600],
                     ),

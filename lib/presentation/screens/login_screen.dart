@@ -81,7 +81,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       children: [
                         // Header Section
                         Text(
-                          'ReachMuslim',
+                          'Reach Muslim',
                           style: theme.textTheme.headlineMedium?.copyWith(
                             fontWeight: FontWeight.w600,
                             color: colorScheme.onSurface,
