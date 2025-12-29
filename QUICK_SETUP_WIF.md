@@ -44,7 +44,12 @@ Since you have limited storage, we'll use the **Google Cloud Console** (web inte
    - `google.subject` = `assertion.sub`
    - `attribute.actor` = `assertion.actor`
    - `attribute.repository` = `assertion.repository`
-8. Click **SAVE**
+8. **Attribute condition** (IMPORTANT - add this):
+   ```
+   assertion.repository=="wedecor/ReachMuslims"
+   ```
+   This restricts access to only your repository.
+9. Click **SAVE**
 
 ### Step 5: Get Your Project Number
 
@@ -66,6 +71,7 @@ Since you have limited storage, we'll use the **Google Cloud Console** (web inte
    ```
    principalSet://iam.googleapis.com/projects/123456789012/locations/global/workloadIdentityPools/github-actions-pool/attribute.repository/wedecor/ReachMuslims
    ```
+   **Note:** This uses `attribute.repository` which must match the attribute mapping you created in Step 4.
 6. **Select a role:** Search for "Workload Identity User" → Select `Workload Identity User`
 7. Click **SAVE**
 
