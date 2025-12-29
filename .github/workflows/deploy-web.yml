@@ -1,0 +1,74 @@
+name: Build and Deploy Web App
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: # Allows manual trigger from GitHub UI
+
+permissions:
+  contents: read
+  id-token: write # Required for Workload Identity Federation
+
+jobs:
+  build-and-deploy-web:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.38.5'
+          channel: 'stable'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Install Firebase CLI
+        run: |
+          npm install -g firebase-tools
+          firebase --version
+
+      - name: Build Web App
+        run: |
+          echo "🔨 Building Flutter web app..."
+          flutter build web --release
+          echo "✅ Web app built successfully!"
+
+      - name: Verify build output
+        run: |
+          if [ ! -d "build/web" ]; then
+            echo "❌ Build output directory not found!"
+            exit 1
+          fi
+          echo "✅ Build output verified:"
+          ls -lah build/web/ | head -20
+
+      - name: Deploy to Firebase Hosting
+        run: |
+          echo "🚀 Deploying to Firebase Hosting..."
+          firebase deploy --only hosting --project reach-muslim-leads --non-interactive
+          echo "✅ Deployment completed!"
+
+      - name: Output deployment URLs
+        run: |
+          echo "✅ Web app deployed successfully!"
+          echo ""
+          echo "🌐 Primary URL: https://reach-muslim-leads.web.app"
+          echo "🌐 Alternative URL: https://reach-muslim-leads.firebaseapp.com"
+          echo ""
+          echo "::notice::Web app deployed: https://reach-muslim-leads.web.app"
+          echo "::notice::Alternative URL: https://reach-muslim-leads.firebaseapp.com"
+
