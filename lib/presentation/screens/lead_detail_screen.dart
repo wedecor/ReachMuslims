@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import '../../domain/models/lead.dart';
-import '../../domain/models/follow_up.dart';
 import '../providers/follow_up_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/lead_assignment_provider.dart';
 import '../providers/user_list_provider.dart';
 import '../providers/lead_list_provider.dart';
+import '../providers/lead_delete_provider.dart';
+import '../../domain/repositories/user_repository.dart';
+import '../../domain/models/user.dart' as domain;
 import '../widgets/priority_star_toggle.dart';
 import '../widgets/last_contacted_indicator.dart';
 import '../widgets/follow_up_timeline_widget.dart';
+import '../widgets/lead_edit_history_timeline_widget.dart';
+import '../../core/utils/phone_number_formatter.dart';
+import 'lead_edit_screen.dart';
 
 class LeadDetailScreen extends ConsumerStatefulWidget {
   final Lead lead;
@@ -68,11 +72,9 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final followUpListState = ref.watch(followUpListProvider(widget.lead.id));
     final addFollowUpState = ref.watch(addFollowUpProvider(widget.lead.id));
     final authState = ref.watch(authProvider);
     final leadListState = ref.watch(leadListProvider);
-    final dateFormat = DateFormat('MMM dd, yyyy HH:mm');
     
     // Get updated lead from list if available, otherwise use widget.lead
     Lead currentLead;
@@ -89,6 +91,34 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(currentLead.name),
+        actions: [
+          // Edit button - show only if user has permission
+          if (_canEditLead(currentLead, authState))
+            IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: () async {
+                final result = await Navigator.push<bool>(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => LeadEditScreen(lead: currentLead),
+                  ),
+                );
+                // Refresh if lead was updated
+                if (result == true && mounted) {
+                  ref.read(leadListProvider.notifier).refresh();
+                }
+              },
+              tooltip: 'Edit Lead',
+            ),
+          // Delete button - Admin only
+          if (authState.isAdmin)
+            IconButton(
+              icon: const Icon(Icons.delete_outline),
+              onPressed: () => _handleDelete(context, currentLead),
+              tooltip: 'Delete Lead',
+              color: Colors.red,
+            ),
+        ],
       ),
       body: Column(
         children: [
@@ -115,7 +145,7 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Text('Phone: ${currentLead.phone}'),
+                  Text('Phone: ${PhoneNumberFormatter.formatPhoneNumber(currentLead.phone)}'),
                   if (currentLead.location != null)
                     Text('Location: ${currentLead.location}'),
                   Text('Status: ${currentLead.status.displayName}'),
@@ -193,30 +223,52 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
                 ],
               ),
             ),
-          // Follow-Up History Timeline (Read-only)
+          // History Tabs (Follow-ups and Edit History)
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: Row(
-                    children: [
-                      Icon(Icons.history, size: 20, color: Colors.grey[700]),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Follow-up History',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+            child: DefaultTabController(
+              length: 2,
+              child: Column(
+                children: [
+                  TabBar(
+                    tabs: const [
+                      Tab(
+                        icon: Icon(Icons.history),
+                        text: 'Follow-ups',
+                      ),
+                      Tab(
+                        icon: Icon(Icons.edit_note),
+                        text: 'Edit History',
                       ),
                     ],
+                    labelColor: Theme.of(context).colorScheme.primary,
+                    unselectedLabelColor: Colors.grey,
                   ),
-                ),
-                Expanded(
-                  child: FollowUpTimelineWidget(leadId: widget.lead.id),
-                ),
-              ],
+                  Expanded(
+                    child: TabBarView(
+                      children: [
+                        // Follow-Up History Timeline
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: FollowUpTimelineWidget(leadId: widget.lead.id),
+                            ),
+                          ],
+                        ),
+                        // Edit History Timeline
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: LeadEditHistoryTimelineWidget(leadId: widget.lead.id),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -225,10 +277,85 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
   }
 
 
+  bool _canEditLead(Lead lead, AuthState authState) {
+    if (!authState.isAuthenticated || authState.user == null) {
+      return false;
+    }
+
+    final user = authState.user!;
+    // Admin can edit any lead, Sales can edit only assigned leads
+    if (user.isAdmin) {
+      return true;
+    }
+
+    // Sales can edit only if lead is assigned to them
+    return lead.assignedTo == user.uid;
+  }
+
+  Future<void> _handleDelete(BuildContext context, Lead lead) async {
+    // Show confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Lead?'),
+        content: const Text(
+          'This will remove the lead from active lists. This action can be reversed.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) {
+      return;
+    }
+
+    final deleteState = ref.read(leadDeleteProvider(lead.id));
+    if (deleteState.isLoading) {
+      return;
+    }
+
+    final success = await ref.read(leadDeleteProvider(lead.id).notifier).deleteLead();
+
+    if (success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Lead deleted successfully'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      // Navigate back to lead list
+      Navigator.pop(context);
+    } else if (mounted) {
+      final error = ref.read(leadDeleteProvider(lead.id)).error;
+      if (error != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${error.message}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   Widget _buildAssignmentDropdown(BuildContext context, AuthState authState) {
     final assignmentState = ref.watch(leadAssignmentProvider(widget.lead.id));
     final userListState = ref.watch(userListProvider(widget.lead.region));
     final leadListState = ref.watch(leadListProvider);
+    final userRepository = ref.watch(userRepositoryProvider);
     
     // Get updated lead from list if available, otherwise use widget.lead
     Lead currentLead;
@@ -253,76 +380,162 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 4),
-        DropdownButtonFormField<String?>(
-          value: currentAssignedUserId,
-          decoration: InputDecoration(
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            filled: true,
-            fillColor: Colors.grey[50],
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-          ),
-          items: [
-            const DropdownMenuItem<String?>(
-              value: null,
-              child: Text('Unassigned'),
-            ),
-            if (userListState.isLoading)
-              const DropdownMenuItem<String>(
-                value: 'loading',
-                enabled: false,
-                child: Text('Loading users...'),
-              )
-            else
-              ...userListState.users.map((user) {
-                return DropdownMenuItem<String>(
-                  value: user.uid,
-                  child: Text(user.name),
+        FutureBuilder<domain.User?>(
+          // Fetch assigned user if not in active list
+          future: (currentAssignedUserId != null && 
+                   !userListState.isLoading &&
+                   !userListState.users.any((user) => user.uid == currentAssignedUserId))
+              ? userRepository.getUserById(currentAssignedUserId)
+              : Future.value(null),
+          builder: (context, assignedUserSnapshot) {
+            // Recalculate inside builder to get fresh state (avoids stale checks)
+            final assignedUserExists = !userListState.isLoading &&
+                currentAssignedUserId != null &&
+                userListState.users.any((user) => user.uid == currentAssignedUserId);
+            
+            // Build dropdown items - MUST include currentAssignedUserId if it exists
+            final items = <DropdownMenuItem<String?>>[
+              const DropdownMenuItem<String?>(
+                value: null,
+                child: Text('Unassigned'),
+              ),
+            ];
+
+            if (userListState.isLoading) {
+              items.add(
+                const DropdownMenuItem<String>(
+                  value: 'loading',
+                  enabled: false,
+                  child: Text('Loading users...'),
+                ),
+              );
+              // If we have an assigned user but list is loading, add it as placeholder
+              if (currentAssignedUserId != null) {
+                items.add(
+                  DropdownMenuItem<String>(
+                    value: currentAssignedUserId,
+                    enabled: false,
+                    child: Text(
+                      currentLead.assignedToName ?? 'Loading...',
+                      style: const TextStyle(color: Colors.grey),
+                    ),
+                  ),
                 );
-              }),
-          ],
-          onChanged: assignmentState.isLoading
-              ? null
-              : (String? newUserId) async {
-                  if (newUserId == currentAssignedUserId) return;
+              }
+            } else {
+              // Add active users
+              for (final user in userListState.users) {
+                items.add(
+                  DropdownMenuItem<String>(
+                    value: user.uid,
+                    child: Text(user.name),
+                  ),
+                );
+              }
 
-                  String? assignedToName;
-                  if (newUserId != null) {
-                    final selectedUser = userListState.users.firstWhere(
-                      (u) => u.uid == newUserId,
-                      orElse: () => throw Exception('User not found'),
-                    );
-                    assignedToName = selectedUser.name;
-                  }
-
-                  final success = await ref
-                      .read(leadAssignmentProvider(widget.lead.id).notifier)
-                      .assignLead(newUserId, assignedToName);
-
-                  if (success && mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(newUserId != null
-                            ? 'Lead assigned successfully'
-                            : 'Lead unassigned successfully'),
-                        backgroundColor: Colors.green,
-                      ),
-                    );
-                    // Refresh lead list to get updated lead
-                    ref.read(leadListProvider.notifier).refresh();
-                  } else if (mounted) {
-                    final error = ref.read(leadAssignmentProvider(widget.lead.id)).error;
-                    if (error != null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Error: ${error.message}'),
-                          backgroundColor: Colors.red,
+              // CRITICAL: Add assigned user ONLY if not already in active list
+              // This ensures the value always matches an item, and prevents duplicates
+              if (currentAssignedUserId != null && !assignedUserExists) {
+                if (assignedUserSnapshot.connectionState == ConnectionState.waiting) {
+                  // Still loading user data
+                  items.add(
+                    DropdownMenuItem<String>(
+                      value: currentAssignedUserId,
+                      enabled: false,
+                      child: const Text('Loading user...', style: TextStyle(color: Colors.grey)),
+                    ),
+                  );
+                } else if (assignedUserSnapshot.hasData && assignedUserSnapshot.data != null) {
+                  // User found
+                  final assignedUser = assignedUserSnapshot.data!;
+                  items.add(
+                    DropdownMenuItem<String>(
+                      value: currentAssignedUserId,
+                      enabled: false,
+                      child: Text(
+                        assignedUser.name,
+                        style: TextStyle(
+                          color: assignedUser.active ? Colors.grey : Colors.red[300],
                         ),
-                      );
-                    }
-                  }
-                },
+                      ),
+                    ),
+                  );
+                } else {
+                  // User not found - use name from lead or show "Unknown"
+                  items.add(
+                    DropdownMenuItem<String>(
+                      value: currentAssignedUserId,
+                      enabled: false,
+                      child: Text(
+                        currentLead.assignedToName ?? 'Unknown User',
+                        style: const TextStyle(color: Colors.grey),
+                      ),
+                    ),
+                  );
+                }
+              }
+            }
+
+            // Ensure value matches exactly one item (no duplicates, no missing)
+            final matchingCount = items.where((item) => item.value == currentAssignedUserId).length;
+            final dropdownValue = (currentAssignedUserId != null && matchingCount == 1)
+                ? currentAssignedUserId
+                : null;
+
+            return DropdownButtonFormField<String?>(
+              value: dropdownValue,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                filled: true,
+                fillColor: Colors.grey[50],
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+              ),
+              items: items,
+              onChanged: assignmentState.isLoading
+                  ? null
+                  : (String? newUserId) async {
+                      if (newUserId == currentAssignedUserId) return;
+
+                      String? assignedToName;
+                      if (newUserId != null) {
+                        final selectedUser = userListState.users.firstWhere(
+                          (u) => u.uid == newUserId,
+                          orElse: () => throw Exception('User not found'),
+                        );
+                        assignedToName = selectedUser.name;
+                      }
+
+                      final success = await ref
+                          .read(leadAssignmentProvider(widget.lead.id).notifier)
+                          .assignLead(newUserId, assignedToName);
+
+                      if (success && mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(newUserId != null
+                                ? 'Lead assigned successfully'
+                                : 'Lead unassigned successfully'),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                        // Refresh lead list to get updated lead
+                        ref.read(leadListProvider.notifier).refresh();
+                      } else if (mounted) {
+                        final error = ref.read(leadAssignmentProvider(widget.lead.id)).error;
+                        if (error != null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Error: ${error.message}'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      }
+                    },
+            );
+          },
         ),
         if (assignmentState.isLoading)
           const Padding(

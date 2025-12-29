@@ -1,5 +1,6 @@
 import '../models/lead.dart';
 import '../models/user.dart';
+import '../models/lead_edit_history.dart';
 
 abstract class LeadRepository {
   Future<List<Lead>> getLeads({
@@ -52,7 +53,62 @@ abstract class LeadRepository {
     UserRegion? region,
   });
 
+  Future<int> getPriorityLeadsCount({
+    required String? userId,
+    required bool isAdmin,
+    UserRegion? region,
+  });
+
+  Future<int> getFollowUpLeadsCount({
+    required String? userId,
+    required bool isAdmin,
+    UserRegion? region,
+  });
+
+  /// Get count of leads contacted today (lastContactedAt is today)
+  /// Uses efficient query instead of fetching all leads
+  Future<int> getLeadsContactedTodayCount({
+    required String? userId,
+    required bool isAdmin,
+    UserRegion? region,
+  });
+
   Future<void> updatePriority(String leadId, bool isPriority);
   Future<void> updateLastContactedAt(String leadId);
+  
+  /// Update lead basic details (name, phone, location)
+  /// Only updates the specified fields, preserves all other fields
+  /// Permission checks: Admin can edit any lead, Sales can edit only assigned leads
+  Future<void> updateLead({
+    required String leadId,
+    required String name,
+    required String phone,
+    String? location,
+    required String? userId,
+    required bool isAdmin,
+  });
+
+  /// Soft delete a lead (sets isDeleted = true)
+  /// Only Admin can delete leads
+  /// Does NOT physically delete the document or any related data
+  Future<void> softDeleteLead({
+    required String leadId,
+    required String? userId,
+    required bool isAdmin,
+  });
+
+  /// Log edit history for a lead
+  /// Creates an entry in the edit_history subcollection
+  Future<void> logEditHistory({
+    required String leadId,
+    required String editedBy,
+    String? editedByName,
+    String? editedByEmail,
+    required Map<String, FieldChange> changes,
+  });
+
+  /// Get edit history for a lead
+  /// Returns list of edit history entries, sorted by editedAt descending
+  Future<List<LeadEditHistory>> getEditHistory(String leadId);
 }
 

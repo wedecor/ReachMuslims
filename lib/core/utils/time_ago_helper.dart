@@ -58,5 +58,46 @@ class TimeAgoHelper {
     final dateFormat = DateFormat('MMM dd, yyyy HH:mm');
     return dateFormat.format(dateTime);
   }
+
+  /// Formats a DateTime as relative time for last contacted display
+  /// Returns: "Just now", "5 min ago", "2 hours ago", "Yesterday", "12 Jun"
+  static String formatRelativeTime(DateTime? dateTime) {
+    if (dateTime == null) return '';
+
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+
+    // Just now (less than 1 minute)
+    if (difference.inMinutes < 1) {
+      return 'Just now';
+    }
+
+    // Minutes ago (less than 1 hour)
+    if (difference.inMinutes < 60) {
+      final minutes = difference.inMinutes;
+      return '$minutes min ago';
+    }
+
+    // Hours ago (less than 24 hours)
+    if (difference.inHours < 24) {
+      final hours = difference.inHours;
+      return '$hours ${hours == 1 ? 'hour' : 'hours'} ago';
+    }
+
+    // Yesterday (between 24-48 hours)
+    if (difference.inDays == 1) {
+      return 'Yesterday';
+    }
+
+    // Days ago (less than 7 days)
+    if (difference.inDays < 7) {
+      final days = difference.inDays;
+      return '$days ${days == 1 ? 'day' : 'days'} ago';
+    }
+
+    // Format as date (e.g., "12 Jun")
+    final dateFormat = DateFormat('d MMM');
+    return dateFormat.format(dateTime);
+  }
 }
 

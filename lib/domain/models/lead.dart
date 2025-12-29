@@ -40,6 +40,7 @@ class Lead {
   final DateTime updatedAt;
   final bool isPriority; // Priority star indicator
   final DateTime? lastContactedAt; // Last contact timestamp
+  final bool isDeleted; // Soft delete flag
 
   const Lead({
     required this.id,
@@ -54,6 +55,7 @@ class Lead {
     required this.updatedAt,
     this.isPriority = false,
     this.lastContactedAt,
+    this.isDeleted = false,
   });
 }
 

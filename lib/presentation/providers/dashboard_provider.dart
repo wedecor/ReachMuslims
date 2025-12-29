@@ -17,6 +17,10 @@ class DashboardStats {
   final int usaLeads;
   final int leadsToday;
   final int leadsThisWeek;
+  final int priorityLeads;
+  final int followUpLeads;
+  final int leadsContactedToday;
+  final int pendingFollowUps;
   final bool isLoading;
   final Failure? error;
 
@@ -30,6 +34,10 @@ class DashboardStats {
     this.usaLeads = 0,
     this.leadsToday = 0,
     this.leadsThisWeek = 0,
+    this.priorityLeads = 0,
+    this.followUpLeads = 0,
+    this.leadsContactedToday = 0,
+    this.pendingFollowUps = 0,
     this.isLoading = false,
     this.error,
   });
@@ -44,6 +52,10 @@ class DashboardStats {
     int? usaLeads,
     int? leadsToday,
     int? leadsThisWeek,
+    int? priorityLeads,
+    int? followUpLeads,
+    int? leadsContactedToday,
+    int? pendingFollowUps,
     bool? isLoading,
     Failure? error,
     bool clearError = false,
@@ -58,6 +70,10 @@ class DashboardStats {
       usaLeads: usaLeads ?? this.usaLeads,
       leadsToday: leadsToday ?? this.leadsToday,
       leadsThisWeek: leadsThisWeek ?? this.leadsThisWeek,
+      priorityLeads: priorityLeads ?? this.priorityLeads,
+      followUpLeads: followUpLeads ?? this.followUpLeads,
+      leadsContactedToday: leadsContactedToday ?? this.leadsContactedToday,
+      pendingFollowUps: pendingFollowUps ?? this.pendingFollowUps,
       isLoading: isLoading ?? this.isLoading,
       error: clearError ? null : (error ?? this.error),
     );
@@ -143,7 +159,41 @@ class DashboardNotifier extends StateNotifier<DashboardStats> {
           isAdmin: isAdmin,
           region: region,
         ),
+        _leadRepository.getPriorityLeadsCount(
+          userId: userId,
+          isAdmin: isAdmin,
+          region: region,
+        ).catchError((e) {
+          debugPrint('Error getting priority leads count: $e');
+          return 0;
+        }),
+        _leadRepository.getFollowUpLeadsCount(
+          userId: userId,
+          isAdmin: isAdmin,
+          region: region,
+        ).catchError((e) {
+          debugPrint('Error getting follow-up leads count: $e');
+          return 0;
+        }),
       ]);
+
+      // Calculate quick stats using dedicated count methods
+      final quickStatsResults = await Future.wait([
+        // Leads contacted today - use dedicated count method
+        _leadRepository.getLeadsContactedTodayCount(
+          userId: userId,
+          isAdmin: isAdmin,
+          region: region,
+        ),
+      ]);
+
+      final leadsContactedToday = quickStatsResults[0];
+
+      // Pending follow-ups: approximation (total - follow-up leads)
+      // This is a rough estimate - exact count would require checking all follow-up histories
+      final pendingFollowUps = results[0] > results[10] 
+          ? (results[0] - results[10]).clamp(0, results[0])
+          : 0;
 
       state = DashboardStats(
         totalLeads: results[0],
@@ -155,6 +205,10 @@ class DashboardNotifier extends StateNotifier<DashboardStats> {
         usaLeads: results[6],
         leadsToday: results[7],
         leadsThisWeek: results[8],
+        priorityLeads: results[9],
+        followUpLeads: results[10],
+        leadsContactedToday: leadsContactedToday,
+        pendingFollowUps: pendingFollowUps,
         isLoading: false,
       );
     } catch (e, stackTrace) {

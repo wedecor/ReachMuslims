@@ -1,10 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/models/lead.dart';
 import '../../domain/models/user.dart';
+import '../../domain/models/lead_edit_history.dart';
 import '../../domain/repositories/lead_repository.dart';
 import '../../core/errors/failures.dart';
 import '../../core/constants/firebase_constants.dart';
 import '../models/lead_model.dart';
+import '../models/lead_edit_history_model.dart';
 
 class LeadRepositoryImpl implements LeadRepository {
   final FirebaseFirestore _firestore;
@@ -28,6 +30,9 @@ class LeadRepositoryImpl implements LeadRepository {
   }) async {
     try {
       Query query = _firestore.collection(FirebaseConstants.leadsCollection);
+
+      // Note: We don't filter isDeleted in query to maintain backward compatibility
+      // with existing leads that don't have the field. We filter in memory instead.
 
       // Role-based filtering
       if (!isAdmin && userId != null) {
@@ -101,6 +106,10 @@ class LeadRepositoryImpl implements LeadRepository {
       List<Lead> leads = snapshot.docs.map((doc) {
         return LeadModel.fromFirestore(doc);
       }).toList();
+
+      // Filter out soft-deleted leads (handle backward compatibility: old leads may not have isDeleted field)
+      // If isDeleted is null (old lead), treat as not deleted
+      leads = leads.where((lead) => !lead.isDeleted).toList();
 
       // If search query provided, filter by phone in memory
       if (searchQuery != null && searchQuery.isNotEmpty) {
@@ -228,6 +237,9 @@ class LeadRepositoryImpl implements LeadRepository {
     try {
       Query query = _firestore.collection(FirebaseConstants.leadsCollection);
 
+      // Note: We don't filter isDeleted in query to maintain backward compatibility
+      // with existing leads that don't have the field. We filter in memory instead.
+
       if (!isAdmin && userId != null) {
         query = query.where('assignedTo', isEqualTo: userId);
       } else if (isAdmin && region != null) {
@@ -235,13 +247,16 @@ class LeadRepositoryImpl implements LeadRepository {
       }
 
       // Use count query if available, otherwise fall back to fetching
+      // Note: We need to filter deleted leads in memory for accuracy
       try {
-        final snapshot = await query.count().get();
-        return snapshot.count ?? 0;
+        final snapshot = await query.limit(1000).get();
+        final leads = snapshot.docs.map((doc) => LeadModel.fromFirestore(doc)).toList();
+        return leads.where((lead) => !lead.isDeleted).length;
       } catch (e) {
         // Fallback: fetch documents and count (for web compatibility)
         final snapshot = await query.limit(1000).get();
-        return snapshot.docs.length;
+        final leads = snapshot.docs.map((doc) => LeadModel.fromFirestore(doc)).toList();
+        return leads.where((lead) => !lead.isDeleted).length;
       }
     } on FirebaseException catch (e) {
       throw FirestoreFailure('Failed to get total leads count: ${e.message ?? 'Unknown error'}');
@@ -261,6 +276,9 @@ class LeadRepositoryImpl implements LeadRepository {
     try {
       Query query = _firestore.collection(FirebaseConstants.leadsCollection);
 
+      // Note: We don't filter isDeleted in query to maintain backward compatibility
+      // with existing leads that don't have the field. We filter in memory instead.
+
       if (!isAdmin && userId != null) {
         query = query.where('assignedTo', isEqualTo: userId);
       } else if (isAdmin && region != null) {
@@ -270,13 +288,16 @@ class LeadRepositoryImpl implements LeadRepository {
       query = query.where('status', isEqualTo: status.name);
 
       // Use count query if available, otherwise fall back to fetching
+      // Note: We need to filter deleted leads in memory for accuracy
       try {
-        final snapshot = await query.count().get();
-        return snapshot.count ?? 0;
+        final snapshot = await query.limit(1000).get();
+        final leads = snapshot.docs.map((doc) => LeadModel.fromFirestore(doc)).toList();
+        return leads.where((lead) => !lead.isDeleted).length;
       } catch (e) {
         // Fallback: fetch documents and count (for web compatibility)
         final snapshot = await query.limit(1000).get();
-        return snapshot.docs.length;
+        final leads = snapshot.docs.map((doc) => LeadModel.fromFirestore(doc)).toList();
+        return leads.where((lead) => !lead.isDeleted).length;
       }
     } on FirebaseException catch (e) {
       throw FirestoreFailure('Failed to get leads count by status: ${e.message ?? 'Unknown error'}');
@@ -295,6 +316,9 @@ class LeadRepositoryImpl implements LeadRepository {
     try {
       Query query = _firestore.collection(FirebaseConstants.leadsCollection);
 
+      // Note: We don't filter isDeleted in query to maintain backward compatibility
+      // with existing leads that don't have the field. We filter in memory instead.
+
       if (!isAdmin && userId != null) {
         query = query.where('assignedTo', isEqualTo: userId);
       }
@@ -302,13 +326,16 @@ class LeadRepositoryImpl implements LeadRepository {
       query = query.where('region', isEqualTo: region.name);
 
       // Use count query if available, otherwise fall back to fetching
+      // Note: We need to filter deleted leads in memory for accuracy
       try {
-        final snapshot = await query.count().get();
-        return snapshot.count ?? 0;
+        final snapshot = await query.limit(1000).get();
+        final leads = snapshot.docs.map((doc) => LeadModel.fromFirestore(doc)).toList();
+        return leads.where((lead) => !lead.isDeleted).length;
       } catch (e) {
         // Fallback: fetch documents and count (for web compatibility)
         final snapshot = await query.limit(1000).get();
-        return snapshot.docs.length;
+        final leads = snapshot.docs.map((doc) => LeadModel.fromFirestore(doc)).toList();
+        return leads.where((lead) => !lead.isDeleted).length;
       }
     } on FirebaseException catch (e) {
       throw FirestoreFailure('Failed to get leads count by region: ${e.message ?? 'Unknown error'}');
@@ -331,6 +358,9 @@ class LeadRepositoryImpl implements LeadRepository {
 
       Query query = _firestore.collection(FirebaseConstants.leadsCollection);
 
+      // Note: We don't filter isDeleted in query to maintain backward compatibility
+      // with existing leads that don't have the field. We filter in memory instead.
+
       // Apply role-based filter first
       if (!isAdmin && userId != null) {
         query = query.where('assignedTo', isEqualTo: userId);
@@ -344,13 +374,16 @@ class LeadRepositoryImpl implements LeadRepository {
           .where('createdAt', isLessThan: Timestamp.fromDate(endOfDay));
 
       // Use count query if available, otherwise fall back to fetching
+      // Note: We need to filter deleted leads in memory for accuracy
       try {
-        final snapshot = await query.count().get();
-        return snapshot.count ?? 0;
+        final snapshot = await query.limit(1000).get();
+        final leads = snapshot.docs.map((doc) => LeadModel.fromFirestore(doc)).toList();
+        return leads.where((lead) => !lead.isDeleted).length;
       } catch (e) {
         // Fallback: fetch documents and count (for web compatibility)
         final snapshot = await query.limit(1000).get();
-        return snapshot.docs.length;
+        final leads = snapshot.docs.map((doc) => LeadModel.fromFirestore(doc)).toList();
+        return leads.where((lead) => !lead.isDeleted).length;
       }
     } on FirebaseException catch (e) {
       throw FirestoreFailure('Failed to get leads created today: ${e.message ?? 'Unknown error'}');
@@ -374,6 +407,9 @@ class LeadRepositoryImpl implements LeadRepository {
 
       Query query = _firestore.collection(FirebaseConstants.leadsCollection);
 
+      // Note: We don't filter isDeleted in query to maintain backward compatibility
+      // with existing leads that don't have the field. We filter in memory instead.
+
       if (!isAdmin && userId != null) {
         query = query.where('assignedTo', isEqualTo: userId);
       } else if (isAdmin && region != null) {
@@ -383,16 +419,140 @@ class LeadRepositoryImpl implements LeadRepository {
       query = query.where('createdAt', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfWeekDay));
 
       // Use count query if available, otherwise fall back to fetching
+      // Note: We need to filter deleted leads in memory for accuracy
       try {
-        final snapshot = await query.count().get();
-        return snapshot.count ?? 0;
+        final snapshot = await query.limit(1000).get();
+        final leads = snapshot.docs.map((doc) => LeadModel.fromFirestore(doc)).toList();
+        return leads.where((lead) => !lead.isDeleted).length;
       } catch (e) {
         // Fallback: fetch documents and count (for web compatibility)
         final snapshot = await query.limit(1000).get();
-        return snapshot.docs.length;
+        final leads = snapshot.docs.map((doc) => LeadModel.fromFirestore(doc)).toList();
+        return leads.where((lead) => !lead.isDeleted).length;
       }
     } on FirebaseException catch (e) {
       throw FirestoreFailure('Failed to get leads created this week: ${e.message ?? 'Unknown error'}');
+    } catch (e) {
+      if (e is Failure) rethrow;
+      throw FirestoreFailure('Unexpected error: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<int> getPriorityLeadsCount({
+    required String? userId,
+    required bool isAdmin,
+    UserRegion? region,
+  }) async {
+    try {
+      Query query = _firestore.collection(FirebaseConstants.leadsCollection);
+
+      // Note: We don't filter isDeleted in query to maintain backward compatibility
+      // with existing leads that don't have the field. We filter in memory instead.
+
+      if (!isAdmin && userId != null) {
+        query = query.where('assignedTo', isEqualTo: userId);
+      } else if (isAdmin && region != null) {
+        query = query.where('region', isEqualTo: region.name);
+      }
+
+      query = query.where('isPriority', isEqualTo: true);
+
+      // Fetch and filter deleted leads in memory
+      try {
+        final snapshot = await query.limit(1000).get();
+        final leads = snapshot.docs.map((doc) => LeadModel.fromFirestore(doc)).toList();
+        return leads.where((lead) => !lead.isDeleted).length;
+      } catch (e) {
+        // Fallback: fetch documents and count (for web compatibility)
+        final snapshot = await query.limit(1000).get();
+        final leads = snapshot.docs.map((doc) => LeadModel.fromFirestore(doc)).toList();
+        return leads.where((lead) => !lead.isDeleted).length;
+      }
+    } on FirebaseException catch (e) {
+      throw FirestoreFailure('Failed to get priority leads count: ${e.message ?? 'Unknown error'}');
+    } catch (e) {
+      if (e is Failure) rethrow;
+      throw FirestoreFailure('Unexpected error: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<int> getFollowUpLeadsCount({
+    required String? userId,
+    required bool isAdmin,
+    UserRegion? region,
+  }) async {
+    try {
+      Query query = _firestore.collection(FirebaseConstants.leadsCollection);
+
+      // Note: We don't filter isDeleted in query to maintain backward compatibility
+      // with existing leads that don't have the field. We filter in memory instead.
+
+      if (!isAdmin && userId != null) {
+        query = query.where('assignedTo', isEqualTo: userId);
+      } else if (isAdmin && region != null) {
+        query = query.where('region', isEqualTo: region.name);
+      }
+
+      // Fetch all leads and filter in memory for lastContactedAt != null
+      // Note: Firestore doesn't support != null queries directly, so we fetch and filter
+      try {
+        final snapshot = await query.limit(1000).get();
+        final leads = snapshot.docs.map((doc) => LeadModel.fromFirestore(doc)).toList();
+        return leads.where((lead) => !lead.isDeleted && lead.lastContactedAt != null).length;
+      } catch (e) {
+        // Fallback: fetch documents and count (for web compatibility)
+        final snapshot = await query.limit(1000).get();
+        final leads = snapshot.docs.map((doc) => LeadModel.fromFirestore(doc)).toList();
+        return leads.where((lead) => !lead.isDeleted && lead.lastContactedAt != null).length;
+      }
+    } on FirebaseException catch (e) {
+      throw FirestoreFailure('Failed to get follow-up leads count: ${e.message ?? 'Unknown error'}');
+    } catch (e) {
+      if (e is Failure) rethrow;
+      throw FirestoreFailure('Unexpected error: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<int> getLeadsContactedTodayCount({
+    required String? userId,
+    required bool isAdmin,
+    UserRegion? region,
+  }) async {
+    try {
+      final now = DateTime.now();
+      final todayStart = DateTime(now.year, now.month, now.day);
+      final todayEnd = todayStart.add(const Duration(days: 1));
+
+      Query query = _firestore.collection(FirebaseConstants.leadsCollection);
+
+      // Apply role-based filtering
+      if (!isAdmin && userId != null) {
+        query = query.where('assignedTo', isEqualTo: userId);
+      } else if (isAdmin && region != null) {
+        query = query.where('region', isEqualTo: region.name);
+      }
+
+      // Filter by lastContactedAt date range (today)
+      query = query
+          .where('lastContactedAt', isGreaterThanOrEqualTo: Timestamp.fromDate(todayStart))
+          .where('lastContactedAt', isLessThan: Timestamp.fromDate(todayEnd));
+
+      // Fetch and filter deleted leads in memory
+      try {
+        final snapshot = await query.limit(1000).get();
+        final leads = snapshot.docs.map((doc) => LeadModel.fromFirestore(doc)).toList();
+        return leads.where((lead) => !lead.isDeleted).length;
+      } catch (e) {
+        // Fallback: fetch documents and count (for web compatibility)
+        final snapshot = await query.limit(1000).get();
+        final leads = snapshot.docs.map((doc) => LeadModel.fromFirestore(doc)).toList();
+        return leads.where((lead) => !lead.isDeleted).length;
+      }
+    } on FirebaseException catch (e) {
+      throw FirestoreFailure('Failed to get leads contacted today count: ${e.message ?? 'Unknown error'}');
     } catch (e) {
       if (e is Failure) rethrow;
       throw FirestoreFailure('Unexpected error: ${e.toString()}');
@@ -429,6 +589,163 @@ class LeadRepositoryImpl implements LeadRepository {
       });
     } on FirebaseException catch (e) {
       throw FirestoreFailure('Failed to update last contacted: ${e.message ?? 'Unknown error'}');
+    } catch (e) {
+      if (e is Failure) rethrow;
+      throw FirestoreFailure('Unexpected error: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<void> updateLead({
+    required String leadId,
+    required String name,
+    required String phone,
+    String? location,
+    required String? userId,
+    required bool isAdmin,
+  }) async {
+    try {
+      // Get lead to check permissions
+      final lead = await getLeadById(leadId);
+      if (lead == null) {
+        throw FirestoreFailure('Lead not found');
+      }
+
+      // Permission check: Admin can edit any lead, Sales can edit only assigned leads
+      if (!isAdmin && lead.assignedTo != userId) {
+        throw FirestoreFailure('You do not have permission to edit this lead');
+      }
+
+      // Build update data - only update specified fields
+      final updateData = <String, dynamic>{
+        'name': name.trim(),
+        'phone': phone.trim(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      };
+
+      // Handle location: if null, delete the field; if provided, set it
+      if (location == null || location.trim().isEmpty) {
+        updateData['location'] = FieldValue.delete();
+      } else {
+        updateData['location'] = location.trim();
+      }
+
+      // Update only the specified fields - preserves all other fields
+      await _firestore
+          .collection(FirebaseConstants.leadsCollection)
+          .doc(leadId)
+          .update(updateData);
+    } on FirebaseException catch (e) {
+      throw FirestoreFailure('Failed to update lead: ${e.message ?? 'Unknown error'}');
+    } catch (e) {
+      if (e is Failure) rethrow;
+      throw FirestoreFailure('Unexpected error: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<void> softDeleteLead({
+    required String leadId,
+    required String? userId,
+    required bool isAdmin,
+  }) async {
+    try {
+      // Permission check: Only Admin can delete leads
+      if (!isAdmin) {
+        throw FirestoreFailure('Only admins can delete leads');
+      }
+
+      // Verify lead exists
+      final lead = await getLeadById(leadId);
+      if (lead == null) {
+        throw FirestoreFailure('Lead not found');
+      }
+
+      // Soft delete: Set isDeleted = true, update updatedAt
+      // Does NOT delete the document or any related data
+      await _firestore
+          .collection(FirebaseConstants.leadsCollection)
+          .doc(leadId)
+          .update({
+        'isDeleted': true,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } on FirebaseException catch (e) {
+      throw FirestoreFailure('Failed to delete lead: ${e.message ?? 'Unknown error'}');
+    } catch (e) {
+      if (e is Failure) rethrow;
+      throw FirestoreFailure('Unexpected error: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<void> logEditHistory({
+    required String leadId,
+    required String editedBy,
+    String? editedByName,
+    String? editedByEmail,
+    required Map<String, FieldChange> changes,
+  }) async {
+    try {
+      // Only log if there are actual changes
+      if (changes.isEmpty) {
+        return;
+      }
+
+      final docRef = _firestore
+          .collection(FirebaseConstants.leadsCollection)
+          .doc(leadId)
+          .collection('edit_history')
+          .doc();
+
+      final historyData = <String, dynamic>{
+        'leadId': leadId,
+        'editedBy': editedBy,
+        'editedAt': FieldValue.serverTimestamp(),
+        'changes': {},
+      };
+
+      if (editedByName != null) {
+        historyData['editedByName'] = editedByName;
+      }
+      if (editedByEmail != null) {
+        historyData['editedByEmail'] = editedByEmail;
+      }
+
+      // Convert changes to Firestore format
+      final changesData = <String, Map<String, String?>>{};
+      changes.forEach((field, change) {
+        changesData[field] = {
+          'old': change.oldValue,
+          'new': change.newValue,
+        };
+      });
+      historyData['changes'] = changesData;
+
+      await docRef.set(historyData);
+    } on FirebaseException catch (e) {
+      throw FirestoreFailure('Failed to log edit history: ${e.message ?? 'Unknown error'}');
+    } catch (e) {
+      if (e is Failure) rethrow;
+      throw FirestoreFailure('Unexpected error: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<List<LeadEditHistory>> getEditHistory(String leadId) async {
+    try {
+      final snapshot = await _firestore
+          .collection(FirebaseConstants.leadsCollection)
+          .doc(leadId)
+          .collection('edit_history')
+          .orderBy('editedAt', descending: true)
+          .get();
+
+      return snapshot.docs
+          .map((doc) => LeadEditHistoryModel.fromFirestore(doc))
+          .toList();
+    } on FirebaseException catch (e) {
+      throw FirestoreFailure('Failed to get edit history: ${e.message ?? 'Unknown error'}');
     } catch (e) {
       if (e is Failure) rethrow;
       throw FirestoreFailure('Unexpected error: ${e.toString()}');

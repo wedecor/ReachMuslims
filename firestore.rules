@@ -46,8 +46,8 @@ service cloud.firestore {
           : false);
     }
     
-    // Helper function to check if user is admin (using custom claims only - FAST)
-    // This avoids Firestore reads in rules
+    // Helper function to check if user is admin (using custom claims - FAST)
+    // Custom claims are set by Cloud Functions when users are approved/updated
     function isAdminFromClaims() {
       return isAuthenticated() && 
              request.auth.token.role == 'admin' &&
@@ -55,8 +55,7 @@ service cloud.firestore {
              request.auth.token.active == true;
     }
     
-    // Helper function to check if user is admin (with fallback to document read)
-    // Use this only when custom claims might not be set yet
+    // Helper function to check if user is admin (with fallback to document read for edge cases)
     function isAdmin() {
       return isAdminFromClaims() || 
              (isAuthenticated() && 
@@ -108,8 +107,8 @@ service cloud.firestore {
         !('role' in request.resource.data) &&
         !('region' in request.resource.data);
       
-      // Only admins can update user data (using custom claims for speed)
-      allow update: if isAdminFromClaims();
+      // Only admins can update user data (uses custom claims for fast path)
+      allow update: if isAdmin();
       
       // No deletes allowed
       allow delete: if false;
@@ -156,6 +155,25 @@ service cloud.firestore {
         allow create: if isAuthenticated();
         
         // No updates or deletes (append-only)
+        allow update, delete: if false;
+      }
+      
+      // ====================================================
+      // EDIT HISTORY SUBCOLLECTION
+      // ====================================================
+      match /edit_history/{historyId} {
+        // LIST: Allow authenticated users (app layer enforces security)
+        // Users can only access edit history for leads they can see
+        allow list: if isAuthenticated();
+        
+        // GET: Allow authenticated users (security enforced by lead access)
+        allow get: if isAuthenticated();
+        
+        // CREATE: Allow authenticated users (app layer enforces permissions)
+        // Edit history is created when users edit leads they have access to
+        allow create: if isAuthenticated();
+        
+        // No updates or deletes (append-only audit trail)
         allow update, delete: if false;
       }
     }

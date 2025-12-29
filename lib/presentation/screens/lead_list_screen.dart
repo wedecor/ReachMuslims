@@ -13,6 +13,7 @@ import '../widgets/lead_card_action_buttons.dart';
 import 'lead_create_screen.dart';
 import 'lead_detail_screen.dart';
 import 'package:intl/intl.dart';
+import '../../core/utils/phone_number_formatter.dart';
 
 class LeadListScreen extends ConsumerStatefulWidget {
   const LeadListScreen({super.key});
@@ -238,9 +239,9 @@ class _LeadListScreenState extends ConsumerState<LeadListScreen> {
                 ],
               ),
               const SizedBox(height: 8),
-              // Middle row: Phone number (subtle)
+              // Middle row: Phone number (subtle, formatted)
               Text(
-                lead.phone,
+                PhoneNumberFormatter.formatPhoneNumber(lead.phone),
                 style: TextStyle(
                   fontSize: 13,
                   color: Colors.grey[700],

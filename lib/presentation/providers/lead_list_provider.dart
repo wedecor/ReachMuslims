@@ -69,9 +69,6 @@ class LeadListNotifier extends StateNotifier<LeadListState> {
 
     final followUpRepository = _ref.read(followUpRepositoryForFilterProvider);
     final now = DateTime.now();
-    final todayStart = DateTime(now.year, now.month, now.day);
-    final sevenDaysAgo = now.subtract(const Duration(days: 7));
-    final fourteenDaysAgo = now.subtract(const Duration(days: 14));
 
     final filteredLeads = <Lead>[];
 
@@ -122,7 +119,41 @@ class LeadListNotifier extends StateNotifier<LeadListState> {
       }
     }
 
-    return filteredLeads;
+      return filteredLeads;
+    }
+
+  List<Lead> _applySorting(List<Lead> leads, LeadSortOption sortOption) {
+    final sortedLeads = List<Lead>.from(leads);
+    
+    switch (sortOption) {
+      case LeadSortOption.newestFirst:
+        sortedLeads.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+        break;
+      case LeadSortOption.lastContacted:
+        sortedLeads.sort((a, b) {
+          // Leads with lastContactedAt come first, then by date DESC
+          if (a.lastContactedAt == null && b.lastContactedAt == null) {
+            return b.updatedAt.compareTo(a.updatedAt);
+          }
+          if (a.lastContactedAt == null) return 1;
+          if (b.lastContactedAt == null) return -1;
+          return b.lastContactedAt!.compareTo(a.lastContactedAt!);
+        });
+        break;
+      case LeadSortOption.priorityFirst:
+        sortedLeads.sort((a, b) {
+          // Priority leads first, then by updatedAt DESC
+          if (a.isPriority && !b.isPriority) return -1;
+          if (!a.isPriority && b.isPriority) return 1;
+          return b.updatedAt.compareTo(a.updatedAt);
+        });
+        break;
+      case LeadSortOption.oldestFirst:
+        sortedLeads.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+        break;
+    }
+    
+    return sortedLeads;
   }
 
   Future<void> loadLeads({bool refresh = false}) async {
@@ -171,6 +202,14 @@ class LeadListNotifier extends StateNotifier<LeadListState> {
       if (filterState.followUpFilter != FollowUpFilter.all) {
         leads = await _applyFollowUpFilter(leads, filterState.followUpFilter);
       }
+
+      // Apply priority filter (in-memory)
+      if (filterState.isPriority != null) {
+        leads = leads.where((lead) => lead.isPriority == filterState.isPriority).toList();
+      }
+
+      // Apply sorting (in-memory)
+      leads = _applySorting(leads, filterState.sortOption);
 
       if (refresh) {
         state = LeadListState(

@@ -94,6 +94,8 @@ class _LeadFilterPanelState extends ConsumerState<LeadFilterPanel> {
                   // Follow-up Filter
                   _buildFollowUpFilter(filterState),
                   const SizedBox(height: 16),
+                  // Priority Filter (moved to main panel, but keep here for consistency)
+                  // Note: Priority filter is now in the main dashboard row
                       // Clear Filters Button
                       if (filterState.hasFilters)
                         OutlinedButton.icon(

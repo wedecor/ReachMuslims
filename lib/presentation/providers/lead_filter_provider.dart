@@ -16,6 +16,13 @@ enum DateRangePreset {
   custom,
 }
 
+enum LeadSortOption {
+  newestFirst, // Default: updatedAt DESC
+  lastContacted, // lastContactedAt DESC
+  priorityFirst, // isPriority DESC, then updatedAt DESC
+  oldestFirst, // createdAt ASC
+}
+
 class LeadFilterState {
   final List<LeadStatus> statuses; // Multi-select
   final String? assignedTo;
@@ -25,6 +32,8 @@ class LeadFilterState {
   final DateTime? createdTo;
   final DateRangePreset? datePreset;
   final FollowUpFilter followUpFilter;
+  final bool? isPriority; // null = all, true = starred only, false = non-starred only
+  final LeadSortOption sortOption;
 
   const LeadFilterState({
     this.statuses = const [],
@@ -35,6 +44,8 @@ class LeadFilterState {
     this.createdTo,
     this.datePreset,
     this.followUpFilter = FollowUpFilter.all,
+    this.isPriority,
+    this.sortOption = LeadSortOption.newestFirst,
   });
 
   LeadFilterState copyWith({
@@ -46,12 +57,15 @@ class LeadFilterState {
     DateTime? createdTo,
     DateRangePreset? datePreset,
     FollowUpFilter? followUpFilter,
+    bool? isPriority,
+    LeadSortOption? sortOption,
     bool clearStatuses = false,
     bool clearAssignedTo = false,
     bool clearSearchQuery = false,
     bool clearRegion = false,
     bool clearDateRange = false,
     bool clearFollowUpFilter = false,
+    bool clearPriority = false,
   }) {
     return LeadFilterState(
       statuses: clearStatuses ? const [] : (statuses ?? this.statuses),
@@ -64,6 +78,8 @@ class LeadFilterState {
       followUpFilter: clearFollowUpFilter
           ? FollowUpFilter.all
           : (followUpFilter ?? this.followUpFilter),
+      isPriority: clearPriority ? null : (isPriority ?? this.isPriority),
+      sortOption: sortOption ?? this.sortOption,
     );
   }
 
@@ -74,7 +90,9 @@ class LeadFilterState {
       region != null ||
       createdFrom != null ||
       createdTo != null ||
-      followUpFilter != FollowUpFilter.all;
+      followUpFilter != FollowUpFilter.all ||
+      isPriority != null ||
+      sortOption != LeadSortOption.newestFirst;
 
   int get activeFilterCount {
     int count = 0;
@@ -84,6 +102,8 @@ class LeadFilterState {
     if (region != null) count++;
     if (createdFrom != null || createdTo != null) count++;
     if (followUpFilter != FollowUpFilter.all) count++;
+    if (isPriority != null) count++;
+    if (sortOption != LeadSortOption.newestFirst) count++;
     return count;
   }
 }
@@ -164,6 +184,17 @@ class LeadFilterNotifier extends StateNotifier<LeadFilterState> {
       followUpFilter: filter,
       clearFollowUpFilter: filter == FollowUpFilter.all,
     );
+  }
+
+  void setIsPriority(bool? isPriority) {
+    state = state.copyWith(
+      isPriority: isPriority,
+      clearPriority: isPriority == null,
+    );
+  }
+
+  void setSortOption(LeadSortOption sortOption) {
+    state = state.copyWith(sortOption: sortOption);
   }
 
   void clearFilters() {

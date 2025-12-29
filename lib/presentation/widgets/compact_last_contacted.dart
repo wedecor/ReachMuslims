@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../domain/models/follow_up.dart';
 import '../../core/utils/time_ago_helper.dart';
-import '../providers/follow_up_provider.dart';
+import '../providers/lead_list_provider.dart';
+import '../../domain/models/lead.dart';
 
 /// Compact last contacted indicator with clock icon
-/// Returns null if no follow-ups exist (to hide the row)
+/// Uses lastContactedAt field from lead for accurate display
 class CompactLastContacted extends ConsumerWidget {
   final String leadId;
 
@@ -16,16 +16,28 @@ class CompactLastContacted extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final followUpState = ref.watch(followUpListProvider(leadId));
-
-    // Hide if loading or no follow-ups
-    if (followUpState.isLoading || followUpState.followUps.isEmpty) {
+    final leadListState = ref.watch(leadListProvider);
+    
+    // Find the lead in the list
+    Lead? lead;
+    try {
+      lead = leadListState.leads.firstWhere((l) => l.id == leadId);
+    } catch (_) {
+      // Lead not found in list, hide indicator
       return const SizedBox.shrink();
     }
 
-    // Get the most recent follow-up (already sorted by newest first)
-    final latestFollowUp = followUpState.followUps.first;
-    final timeAgo = TimeAgoHelper.formatTimeAgo(latestFollowUp.createdAt);
+    // Hide if lastContactedAt is null
+    if (lead.lastContactedAt == null) {
+      return const SizedBox.shrink();
+    }
+
+    final relativeTime = TimeAgoHelper.formatRelativeTime(lead.lastContactedAt);
+    
+    // Hide if formatting returned empty string
+    if (relativeTime.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -37,7 +49,7 @@ class CompactLastContacted extends ConsumerWidget {
         ),
         const SizedBox(width: 4),
         Text(
-          timeAgo,
+          relativeTime,
           style: TextStyle(
             fontSize: 11,
             color: Colors.grey[600],
