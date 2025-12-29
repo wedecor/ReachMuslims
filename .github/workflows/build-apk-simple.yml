@@ -42,24 +42,35 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
-      - name: Verify Storage bucket exists
+      - name: Find Storage bucket
+        id: find-bucket
         run: |
-          # Check if bucket exists
-          if gsutil ls -b gs://reach-muslim-leads.appspot.com 2>/dev/null; then
-            echo "✅ Storage bucket exists"
+          echo "🔍 Listing available Storage buckets..."
+          gsutil ls -b || echo "No buckets found or permission issue"
+          echo ""
+          
+          # Try the default Firebase Storage bucket name
+          BUCKET_NAME="reach-muslim-leads.appspot.com"
+          if gsutil ls -b gs://$BUCKET_NAME 2>/dev/null; then
+            echo "✅ Found bucket: gs://$BUCKET_NAME"
+            echo "bucket_name=$BUCKET_NAME" >> $GITHUB_OUTPUT
           else
-            echo "❌ Storage bucket not found!"
-            echo ""
-            echo "The Firebase Storage bucket must be created by enabling Firebase Storage in the console."
-            echo "Please follow these steps:"
-            echo "1. Go to: https://console.firebase.google.com/project/reach-muslim-leads/storage"
-            echo "2. Click 'Get started' (if Storage is not enabled)"
-            echo "3. Choose 'Start in production mode' or 'Start in test mode'"
-            echo "4. Select a location (e.g., us-central1)"
-            echo "5. Click 'Done'"
-            echo ""
-            echo "This will automatically create the bucket: gs://reach-muslim-leads.appspot.com"
-            exit 1
+            echo "⚠️  Default bucket not found, checking alternative names..."
+            # Try alternative bucket name format
+            ALT_BUCKET="reach-muslim-leads.firebasestorage.app"
+            if gsutil ls -b gs://$ALT_BUCKET 2>/dev/null; then
+              echo "✅ Found bucket: gs://$ALT_BUCKET"
+              echo "bucket_name=$ALT_BUCKET" >> $GITHUB_OUTPUT
+            else
+              echo "❌ Storage bucket not found!"
+              echo ""
+              echo "Please check your Firebase Storage buckets in the console:"
+              echo "https://console.firebase.google.com/project/reach-muslim-leads/storage"
+              echo ""
+              echo "Or check Google Cloud Storage:"
+              echo "https://console.cloud.google.com/storage/browser?project=reach-muslim-leads"
+              exit 1
+            fi
           fi
 
       - name: Build APK
@@ -73,24 +84,28 @@ jobs:
           TIMESTAMP=$(date +%Y%m%d_%H%M%S)
           APK_NAME="reachmuslim_v${VERSION_NAME}_${VERSION_CODE}_${TIMESTAMP}.apk"
           echo "apk_name=$APK_NAME" >> $GITHUB_OUTPUT
-          echo "download_url=https://storage.googleapis.com/reach-muslim-leads.appspot.com/apk/$APK_NAME" >> $GITHUB_OUTPUT
+          BUCKET_NAME="${{ steps.find-bucket.outputs.bucket_name }}"
+          echo "download_url=https://storage.googleapis.com/$BUCKET_NAME/apk/$APK_NAME" >> $GITHUB_OUTPUT
 
       - name: Upload APK to Firebase Storage
         run: |
-          gsutil cp build/app/outputs/flutter-apk/app-release.apk gs://reach-muslim-leads.appspot.com/apk/${{ steps.apk-info.outputs.apk_name }}
-          gsutil acl ch -u AllUsers:R gs://reach-muslim-leads.appspot.com/apk/${{ steps.apk-info.outputs.apk_name }}
+          BUCKET_NAME="${{ steps.find-bucket.outputs.bucket_name }}"
+          gsutil cp build/app/outputs/flutter-apk/app-release.apk gs://$BUCKET_NAME/apk/${{ steps.apk-info.outputs.apk_name }}
+          gsutil acl ch -u AllUsers:R gs://$BUCKET_NAME/apk/${{ steps.apk-info.outputs.apk_name }}
 
       - name: Create latest symlink
         run: |
-          gsutil cp build/app/outputs/flutter-apk/app-release.apk gs://reach-muslim-leads.appspot.com/apk/latest.apk
-          gsutil acl ch -u AllUsers:R gs://reach-muslim-leads.appspot.com/apk/latest.apk
+          BUCKET_NAME="${{ steps.find-bucket.outputs.bucket_name }}"
+          gsutil cp build/app/outputs/flutter-apk/app-release.apk gs://$BUCKET_NAME/apk/latest.apk
+          gsutil acl ch -u AllUsers:R gs://$BUCKET_NAME/apk/latest.apk
 
       - name: Output download URLs
         run: |
+          BUCKET_NAME="${{ steps.find-bucket.outputs.bucket_name }}"
           echo "✅ APK deployed successfully!"
           echo ""
           echo "📱 Versioned APK: ${{ steps.apk-info.outputs.download_url }}"
-          echo "📱 Latest APK: https://storage.googleapis.com/reach-muslim-leads.appspot.com/apk/latest.apk"
+          echo "📱 Latest APK: https://storage.googleapis.com/$BUCKET_NAME/apk/latest.apk"
           echo ""
           echo "::notice::Versioned APK: ${{ steps.apk-info.outputs.download_url }}"
-          echo "::notice::Latest APK: https://storage.googleapis.com/reach-muslim-leads.appspot.com/apk/latest.apk"
+          echo "::notice::Latest APK: https://storage.googleapis.com/$BUCKET_NAME/apk/latest.apk"
