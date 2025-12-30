@@ -31,25 +31,26 @@ class LeadCardActions extends ConsumerWidget {
     final success = await service.callLead(lead, context);
 
     if (!success && context.mounted) {
+      final colorScheme = Theme.of(context).colorScheme;
       if (lead.phone.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No phone number available for this lead.'),
-            backgroundColor: Colors.red,
+          SnackBar(
+            content: const Text('No phone number available for this lead.'),
+            backgroundColor: colorScheme.error,
           ),
         );
       } else if (!service.isMobilePlatform(context)) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Call is available on mobile only.'),
-            backgroundColor: Colors.orange,
+          SnackBar(
+            content: const Text('Call is available on mobile only.'),
+            backgroundColor: colorScheme.tertiaryContainer,
           ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Unable to open phone dialer.'),
-            backgroundColor: Colors.red,
+          SnackBar(
+            content: const Text('Unable to open phone dialer.'),
+            backgroundColor: colorScheme.error,
           ),
         );
       }
@@ -64,18 +65,19 @@ class LeadCardActions extends ConsumerWidget {
     final success = await service.whatsappLead(lead, context);
 
     if (!success && context.mounted) {
+      final colorScheme = Theme.of(context).colorScheme;
       if (lead.phone.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No phone number available for this lead.'),
-            backgroundColor: Colors.red,
+          SnackBar(
+            content: const Text('No phone number available for this lead.'),
+            backgroundColor: colorScheme.error,
           ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Unable to open WhatsApp.'),
-            backgroundColor: Colors.red,
+          SnackBar(
+            content: const Text('Unable to open WhatsApp.'),
+            backgroundColor: colorScheme.error,
           ),
         );
       }
@@ -91,10 +93,11 @@ class LeadCardActions extends ConsumerWidget {
 
     if (user == null) {
       if (context.mounted) {
+        final colorScheme = Theme.of(context).colorScheme;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('User not authenticated.'),
-            backgroundColor: Colors.red,
+          SnackBar(
+            content: const Text('User not authenticated.'),
+            backgroundColor: colorScheme.error,
           ),
         );
       }
@@ -105,28 +108,30 @@ class LeadCardActions extends ConsumerWidget {
     final success = await service.whatsappFollowUp(lead, context, user);
 
     if (!success && context.mounted) {
+      final colorScheme = Theme.of(context).colorScheme;
       if (lead.phone.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No phone number available for this lead.'),
-            backgroundColor: Colors.red,
+          SnackBar(
+            content: const Text('No phone number available for this lead.'),
+            backgroundColor: colorScheme.error,
           ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('WhatsApp opened, but failed to log follow-up.'),
-            backgroundColor: Colors.orange,
+          SnackBar(
+            content: const Text('WhatsApp opened, but failed to log follow-up.'),
+            backgroundColor: colorScheme.tertiaryContainer,
           ),
         );
       }
     } else if (success && context.mounted) {
       // Refresh lead list to get updated lastContactedAt and follow-ups
       ref.read(leadListProvider.notifier).refresh();
+      final colorScheme = Theme.of(context).colorScheme;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('WhatsApp follow-up logged successfully.'),
-          backgroundColor: Colors.green,
+        SnackBar(
+          content: const Text('WhatsApp follow-up logged successfully.'),
+          backgroundColor: colorScheme.primaryContainer,
         ),
       );
     }
@@ -146,7 +151,9 @@ class LeadCardActions extends ConsumerWidget {
           message: isMobile ? 'Call lead' : 'Call is available on mobile only',
           child: IconButton(
             icon: const Icon(Icons.phone),
-            color: hasPhone && isMobile ? Colors.blue : Colors.grey,
+            color: hasPhone && isMobile 
+                ? Theme.of(context).colorScheme.primary 
+                : Theme.of(context).colorScheme.onSurfaceVariant,
             onPressed: hasPhone && isMobile ? () => _handleCall(context, ref) : null,
             iconSize: 20,
             padding: EdgeInsets.zero,
@@ -159,7 +166,9 @@ class LeadCardActions extends ConsumerWidget {
           message: 'Open WhatsApp with initial message',
           child: IconButton(
             icon: const Icon(Icons.chat),
-            color: hasPhone ? Colors.green : Colors.grey,
+            color: hasPhone 
+                ? Theme.of(context).colorScheme.primaryContainer 
+                : Theme.of(context).colorScheme.onSurfaceVariant,
             onPressed: hasPhone ? () => _handleWhatsAppInitial(context, ref) : null,
             iconSize: 20,
             padding: EdgeInsets.zero,
@@ -172,7 +181,9 @@ class LeadCardActions extends ConsumerWidget {
           message: 'Send WhatsApp follow-up and log it',
           child: IconButton(
             icon: const Icon(Icons.notes),
-            color: hasPhone ? Colors.green[700] : Colors.grey,
+            color: hasPhone 
+                ? Theme.of(context).colorScheme.primaryContainer 
+                : Theme.of(context).colorScheme.onSurfaceVariant,
             onPressed: hasPhone ? () => _handleWhatsAppFollowUp(context, ref) : null,
             iconSize: 20,
             padding: EdgeInsets.zero,

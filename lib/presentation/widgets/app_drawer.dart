@@ -92,7 +92,7 @@ class AppDrawer extends ConsumerWidget {
               // Avatar
               CircleAvatar(
                 radius: 32,
-                backgroundColor: Colors.white,
+                backgroundColor: Theme.of(context).colorScheme.surface,
                 child: Text(
                   user.name.isNotEmpty ? user.name[0].toUpperCase() : 'U',
                   style: TextStyle(
@@ -106,8 +106,8 @@ class AppDrawer extends ConsumerWidget {
               // User Name
               Text(
                 user.name,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onPrimary,
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
@@ -117,7 +117,7 @@ class AppDrawer extends ConsumerWidget {
               Text(
                 user.email,
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.9),
+                  color: Theme.of(context).colorScheme.onPrimary.withOpacity(0.9),
                   fontSize: 14,
                 ),
               ),
@@ -256,8 +256,8 @@ class AppDrawer extends ConsumerWidget {
               ),
               child: Text(
                 badgeCount > 9 ? '9+' : badgeCount.toString(),
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onError,
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
                 ),

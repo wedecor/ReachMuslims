@@ -29,12 +29,12 @@ class LeadEditHistoryTimelineWidget extends ConsumerWidget {
             Icon(
               Icons.error_outline,
               size: 48,
-              color: Colors.red[300],
+              color: Theme.of(context).colorScheme.error,
             ),
             const SizedBox(height: 8),
             Text(
               'Error loading edit history: ${historyState.error!.message}',
-              style: const TextStyle(color: Colors.red),
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
               textAlign: TextAlign.center,
             ),
           ],
@@ -50,13 +50,13 @@ class LeadEditHistoryTimelineWidget extends ConsumerWidget {
             Icon(
               Icons.edit_note,
               size: 48,
-              color: Colors.grey[400],
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
             const SizedBox(height: 8),
             Text(
               'No edit history yet',
               style: TextStyle(
-                color: Colors.grey[600],
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
                 fontSize: 16,
               ),
             ),
@@ -89,13 +89,13 @@ class LeadEditHistoryTimelineWidget extends ConsumerWidget {
                 Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: Colors.purple[50],
+                    color: Theme.of(context).colorScheme.secondaryContainer,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
                     Icons.edit,
                     size: 18,
-                    color: Colors.purple[700],
+                    color: Theme.of(context).colorScheme.onSecondaryContainer,
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -104,7 +104,7 @@ class LeadEditHistoryTimelineWidget extends ConsumerWidget {
                   'Data Edited',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: Colors.purple[700],
+                    color: Theme.of(context).colorScheme.onSecondaryContainer,
                     fontSize: 14,
                   ),
                 ),
@@ -114,7 +114,7 @@ class LeadEditHistoryTimelineWidget extends ConsumerWidget {
                   TimeAgoHelper.formatTimelineDate(history.editedAt),
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.grey[600],
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -136,14 +136,14 @@ class LeadEditHistoryTimelineWidget extends ConsumerWidget {
                   Icon(
                     Icons.person,
                     size: 14,
-                    color: Colors.grey[600],
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(width: 4),
                   Text(
                     'Edited by ${history.editedByName}',
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.grey[600],
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -167,7 +167,7 @@ class LeadEditHistoryTimelineWidget extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(6),
       ),
       child: Column(
@@ -192,17 +192,17 @@ class LeadEditHistoryTimelineWidget extends ConsumerWidget {
                       'Old:',
                       style: TextStyle(
                         fontSize: 11,
-                        color: Colors.grey[600],
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       oldValue,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                         decoration: TextDecoration.lineThrough,
-                        color: Colors.red,
+                        color: Theme.of(context).colorScheme.error,
                       ),
                     ),
                   ],
@@ -217,16 +217,16 @@ class LeadEditHistoryTimelineWidget extends ConsumerWidget {
                       'New:',
                       style: TextStyle(
                         fontSize: 11,
-                        color: Colors.grey[600],
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       newValue,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
-                        color: Colors.green,
+                        color: Theme.of(context).colorScheme.primaryContainer,
                         fontWeight: FontWeight.w500,
                       ),
                     ),

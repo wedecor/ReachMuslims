@@ -29,25 +29,26 @@ class CircularActionButtons extends ConsumerWidget {
     final success = await service.callLead(lead, context);
 
     if (!success && context.mounted) {
+      final colorScheme = Theme.of(context).colorScheme;
       if (lead.phone.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No phone number available for this lead.'),
-            backgroundColor: Colors.red,
+          SnackBar(
+            content: const Text('No phone number available for this lead.'),
+            backgroundColor: colorScheme.error,
           ),
         );
       } else if (!service.isMobilePlatform(context)) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Call is available on mobile only.'),
-            backgroundColor: Colors.orange,
+          SnackBar(
+            content: const Text('Call is available on mobile only.'),
+            backgroundColor: colorScheme.tertiaryContainer,
           ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Unable to open phone dialer.'),
-            backgroundColor: Colors.red,
+          SnackBar(
+            content: const Text('Unable to open phone dialer.'),
+            backgroundColor: colorScheme.error,
           ),
         );
       }
@@ -63,10 +64,11 @@ class CircularActionButtons extends ConsumerWidget {
 
     if (user == null) {
       if (context.mounted) {
+        final colorScheme = Theme.of(context).colorScheme;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('User not authenticated.'),
-            backgroundColor: Colors.red,
+          SnackBar(
+            content: const Text('User not authenticated.'),
+            backgroundColor: colorScheme.error,
           ),
         );
       }
@@ -77,27 +79,29 @@ class CircularActionButtons extends ConsumerWidget {
     final success = await service.whatsappFollowUp(lead, context, user);
 
     if (!success && context.mounted) {
+      final colorScheme = Theme.of(context).colorScheme;
       if (lead.phone.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No phone number available for this lead.'),
-            backgroundColor: Colors.red,
+          SnackBar(
+            content: const Text('No phone number available for this lead.'),
+            backgroundColor: colorScheme.error,
           ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('WhatsApp opened, but failed to log follow-up.'),
-            backgroundColor: Colors.orange,
+          SnackBar(
+            content: const Text('WhatsApp opened, but failed to log follow-up.'),
+            backgroundColor: colorScheme.tertiaryContainer,
           ),
         );
       }
     } else if (success && context.mounted) {
       ref.read(leadListProvider.notifier).refresh();
+      final colorScheme = Theme.of(context).colorScheme;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('WhatsApp follow-up logged successfully.'),
-          backgroundColor: Colors.green,
+        SnackBar(
+          content: const Text('WhatsApp follow-up logged successfully.'),
+          backgroundColor: colorScheme.primaryContainer,
         ),
       );
     }
@@ -129,12 +133,14 @@ class CircularActionButtons extends ConsumerWidget {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: isMobile ? Colors.green : Colors.grey[400],
+                  color: isMobile 
+                      ? Theme.of(context).colorScheme.primaryContainer 
+                      : Theme.of(context).colorScheme.onSurfaceVariant,
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   Icons.phone,
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.onPrimary,
                   size: 18,
                 ),
               ),
@@ -157,11 +163,11 @@ class CircularActionButtons extends ConsumerWidget {
                   color: const Color(0xFF25D366), // WhatsApp green
                   shape: BoxShape.circle,
                 ),
-                child: const Center(
+                child: Center(
                   child: Text(
                     'WA',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.onPrimary,
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
                     ),
