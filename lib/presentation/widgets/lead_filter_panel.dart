@@ -41,13 +41,13 @@ class _LeadFilterPanelState extends ConsumerState<LeadFilterPanel> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.blue[100],
+                      color: Theme.of(context).colorScheme.primaryContainer,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
                       '${filterState.activeFilterCount} active',
                       style: TextStyle(
-                        color: Colors.blue[800],
+                        color: Theme.of(context).colorScheme.onPrimaryContainer,
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
                       ),
@@ -122,12 +122,12 @@ class _LeadFilterPanelState extends ConsumerState<LeadFilterPanel> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Status',
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w500,
-            color: Colors.grey,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
         const SizedBox(height: 8),
@@ -176,11 +176,11 @@ class _LeadFilterPanelState extends ConsumerState<LeadFilterPanel> {
 
     return DropdownButtonFormField<String?>(
       value: ref.watch(leadFilterProvider).assignedTo,
-      decoration: const InputDecoration(
+      decoration: InputDecoration(
         labelText: 'Assigned To',
-        border: OutlineInputBorder(),
+        border: const OutlineInputBorder(),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: Theme.of(context).colorScheme.surface,
       ),
       items: [
         const DropdownMenuItem<String?>(
@@ -211,11 +211,11 @@ class _LeadFilterPanelState extends ConsumerState<LeadFilterPanel> {
   Widget _buildRegionFilter(LeadFilterState filterState) {
     return DropdownButtonFormField<UserRegion?>(
       value: filterState.region,
-      decoration: const InputDecoration(
+      decoration: InputDecoration(
         labelText: 'Region',
-        border: OutlineInputBorder(),
+        border: const OutlineInputBorder(),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: Theme.of(context).colorScheme.surface,
       ),
       items: [
         const DropdownMenuItem<UserRegion?>(
@@ -242,12 +242,12 @@ class _LeadFilterPanelState extends ConsumerState<LeadFilterPanel> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Created Date Range',
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w500,
-            color: Colors.grey,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
         const SizedBox(height: 8),
@@ -361,11 +361,11 @@ class _LeadFilterPanelState extends ConsumerState<LeadFilterPanel> {
   Widget _buildFollowUpFilter(LeadFilterState filterState) {
     return DropdownButtonFormField<FollowUpFilter>(
       value: filterState.followUpFilter,
-      decoration: const InputDecoration(
+      decoration: InputDecoration(
         labelText: 'Follow-up Status',
-        border: OutlineInputBorder(),
+        border: const OutlineInputBorder(),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: Theme.of(context).colorScheme.surface,
       ),
       items: FollowUpFilter.values.map((filter) {
         String label;

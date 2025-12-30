@@ -128,7 +128,7 @@ class _PriorityStarToggleState extends ConsumerState<PriorityStarToggle> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(message),
-          backgroundColor: Colors.red,
+          backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
     }
@@ -145,7 +145,9 @@ class _PriorityStarToggleState extends ConsumerState<PriorityStarToggle> {
             )
           : Icon(
               _optimisticPriority ? Icons.star : Icons.star_border,
-              color: _optimisticPriority ? Colors.amber : Colors.grey,
+              color: _optimisticPriority 
+                  ? Theme.of(context).colorScheme.secondary 
+                  : Theme.of(context).colorScheme.onSurfaceVariant,
               size: 28,
             ),
       tooltip: _optimisticPriority ? 'Remove priority' : 'Mark as priority',

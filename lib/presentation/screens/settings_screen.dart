@@ -44,22 +44,24 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         _newPasswordController.clear();
         _confirmPasswordController.clear();
 
+        final colorScheme = Theme.of(context).colorScheme;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Password changed successfully'),
-            backgroundColor: Colors.green,
+          SnackBar(
+            content: const Text('Password changed successfully'),
+            backgroundColor: colorScheme.primaryContainer,
             behavior: SnackBarBehavior.floating,
           ),
         );
       }
     } catch (e) {
       if (mounted) {
+        final colorScheme = Theme.of(context).colorScheme;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
               e is Failure ? e.message : 'Failed to change password. Please try again.',
             ),
-            backgroundColor: Colors.red,
+            backgroundColor: colorScheme.error,
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -334,10 +336,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
                 const Divider(height: 1),
                 ListTile(
-                  leading: const Icon(Icons.logout, color: Colors.red),
-                  title: const Text(
+                  leading: Icon(Icons.logout, color: theme.colorScheme.error),
+                  title: Text(
                     'Logout',
-                    style: TextStyle(color: Colors.red),
+                    style: TextStyle(color: theme.colorScheme.error),
                   ),
                   onTap: () async {
                     final confirmed = await showDialog<bool>(
@@ -353,7 +355,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           FilledButton(
                             onPressed: () => Navigator.pop(context, true),
                             style: FilledButton.styleFrom(
-                              backgroundColor: Colors.red,
+                              backgroundColor: theme.colorScheme.error,
                             ),
                             child: const Text('Logout'),
                           ),

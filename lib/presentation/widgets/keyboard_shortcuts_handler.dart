@@ -110,9 +110,9 @@ class KeyboardShortcutsHandler extends ConsumerWidget {
   Future<void> _handleCall(BuildContext context, WidgetRef ref, Lead lead) async {
     if (lead.phone.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No phone number available'),
-          backgroundColor: Colors.red,
+        SnackBar(
+          content: const Text('No phone number available'),
+          backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
       return;
@@ -129,9 +129,9 @@ class KeyboardShortcutsHandler extends ConsumerWidget {
   Future<void> _handleWhatsApp(BuildContext context, WidgetRef ref, Lead lead) async {
     if (lead.phone.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No phone number available'),
-          backgroundColor: Colors.red,
+        SnackBar(
+          content: const Text('No phone number available'),
+          backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
       return;
@@ -143,9 +143,9 @@ class KeyboardShortcutsHandler extends ConsumerWidget {
 
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('User not authenticated'),
-          backgroundColor: Colors.red,
+        SnackBar(
+          content: const Text('User not authenticated'),
+          backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
       return;

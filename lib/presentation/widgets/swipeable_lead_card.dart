@@ -35,12 +35,13 @@ class _SwipeableLeadCardState extends ConsumerState<SwipeableLeadCard> {
 
   Future<void> _handleSwipeCall() async {
     final connectivityState = ref.read(connectivityProvider);
+    final colorScheme = Theme.of(context).colorScheme;
     if (!connectivityState.isOnline) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Call unavailable offline'),
-            backgroundColor: Colors.orange,
+          SnackBar(
+            content: const Text('Call unavailable offline'),
+            backgroundColor: colorScheme.tertiaryContainer,
           ),
         );
       }
@@ -50,9 +51,9 @@ class _SwipeableLeadCardState extends ConsumerState<SwipeableLeadCard> {
     if (widget.lead.phone.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No phone number available'),
-            backgroundColor: Colors.red,
+          SnackBar(
+            content: const Text('No phone number available'),
+            backgroundColor: colorScheme.error,
           ),
         );
       }
@@ -72,12 +73,13 @@ class _SwipeableLeadCardState extends ConsumerState<SwipeableLeadCard> {
 
   Future<void> _handleSwipeWhatsApp() async {
     final connectivityState = ref.read(connectivityProvider);
+    final colorScheme = Theme.of(context).colorScheme;
     if (!connectivityState.isOnline) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('WhatsApp unavailable offline'),
-            backgroundColor: Colors.orange,
+          SnackBar(
+            content: const Text('WhatsApp unavailable offline'),
+            backgroundColor: colorScheme.tertiaryContainer,
           ),
         );
       }
@@ -87,9 +89,9 @@ class _SwipeableLeadCardState extends ConsumerState<SwipeableLeadCard> {
     if (widget.lead.phone.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No phone number available'),
-            backgroundColor: Colors.red,
+          SnackBar(
+            content: const Text('No phone number available'),
+            backgroundColor: colorScheme.error,
           ),
         );
       }
@@ -106,9 +108,9 @@ class _SwipeableLeadCardState extends ConsumerState<SwipeableLeadCard> {
     if (user == null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('User not authenticated'),
-            backgroundColor: Colors.red,
+          SnackBar(
+            content: const Text('User not authenticated'),
+            backgroundColor: colorScheme.error,
           ),
         );
       }
@@ -148,14 +150,14 @@ class _SwipeableLeadCardState extends ConsumerState<SwipeableLeadCard> {
           color: const Color(0xFF25D366), // WhatsApp green
           borderRadius: BorderRadius.circular(12),
         ),
-        child: const Row(
+        child: Row(
           children: [
-            Icon(Icons.chat, color: Colors.white, size: 28),
-            SizedBox(width: 12),
+            Icon(Icons.chat, color: Theme.of(context).colorScheme.onPrimary, size: 28),
+            const SizedBox(width: 12),
             Text(
               'WhatsApp',
               style: TextStyle(
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.onPrimary,
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
@@ -170,19 +172,19 @@ class _SwipeableLeadCardState extends ConsumerState<SwipeableLeadCard> {
           color: Theme.of(context).colorScheme.primary,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: const Row(
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             Text(
               'Call',
               style: TextStyle(
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.onPrimary,
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(width: 12),
-            Icon(Icons.phone, color: Colors.white, size: 28),
+            const SizedBox(width: 12),
+            Icon(Icons.phone, color: Theme.of(context).colorScheme.onPrimary, size: 28),
           ],
         ),
       ),

@@ -32,7 +32,7 @@ class AboutScreen extends ConsumerWidget {
             Text(
               'Version 1.1.0',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Colors.grey[600],
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
             ),
             const SizedBox(height: 32),
@@ -59,7 +59,7 @@ class AboutScreen extends ConsumerWidget {
               child: Text(
                 '© 2024 Reach Muslims',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey[600],
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
               ),
             ),
