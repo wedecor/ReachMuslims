@@ -128,9 +128,9 @@ service cloud.firestore {
       // Users can only access leads they can see (enforced by repository filters)
       allow get: if isAuthenticated();
       
-      // CREATE: Admin can create leads (app layer validates region)
-      // Using custom claims directly to avoid Firestore reads
-      allow create: if isAdminFromClaims();
+      // CREATE: All authenticated users can create leads (no restrictions)
+      // App layer handles any business logic validation
+      allow create: if isAuthenticated();
       
       // UPDATE: Allow authenticated users (app layer enforces permissions)
       // The lead providers check role/region/assignedTo before allowing updates

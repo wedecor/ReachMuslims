@@ -61,3 +61,30 @@ final userListProvider = StateNotifierProvider.family<UserListNotifier, UserList
   return UserListNotifier(userRepository, region);
 });
 
+// Provider for all active users (cross-region support)
+class AllActiveUsersNotifier extends StateNotifier<UserListState> {
+  final UserRepository _userRepository;
+
+  AllActiveUsersNotifier(this._userRepository) : super(const UserListState()) {
+    loadUsers();
+  }
+
+  Future<void> loadUsers() async {
+    state = state.copyWith(isLoading: true, clearError: true);
+    try {
+      final users = await _userRepository.getAllActiveUsers();
+      state = state.copyWith(users: users, isLoading: false);
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e is Failure ? e : FirestoreFailure('Failed to load users: ${e.toString()}'),
+      );
+    }
+  }
+}
+
+final allActiveUsersProvider = StateNotifierProvider<AllActiveUsersNotifier, UserListState>((ref) {
+  final userRepository = ref.watch(userRepositoryProvider);
+  return AllActiveUsersNotifier(userRepository);
+});
+

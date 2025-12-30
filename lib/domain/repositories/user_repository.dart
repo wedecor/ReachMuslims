@@ -2,6 +2,7 @@ import '../models/user.dart';
 
 abstract class UserRepository {
   Future<List<User>> getUsersByRegion(UserRegion region);
+  Future<List<User>> getAllActiveUsers();
   Future<User?> getUserById(String userId);
   Future<List<User>> getPendingUsers();
   Future<List<User>> getAllUsers();

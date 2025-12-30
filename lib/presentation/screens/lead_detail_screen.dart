@@ -13,6 +13,7 @@ import '../widgets/priority_star_toggle.dart';
 import '../widgets/last_contacted_indicator.dart';
 import '../widgets/follow_up_timeline_widget.dart';
 import '../widgets/lead_edit_history_timeline_widget.dart';
+import '../widgets/status_dropdown.dart';
 import '../../core/utils/phone_number_formatter.dart';
 import 'lead_edit_screen.dart';
 
@@ -145,10 +146,17 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Text('Phone: ${PhoneNumberFormatter.formatPhoneNumber(currentLead.phone)}'),
+                  Text('Phone: ${PhoneNumberFormatter.formatPhoneNumber(currentLead.phone, region: currentLead.region)}'),
                   if (currentLead.location != null)
                     Text('Location: ${currentLead.location}'),
-                  Text('Status: ${currentLead.status.displayName}'),
+                  // Status dropdown - editable
+                  Row(
+                    children: [
+                      const Text('Status: '),
+                      const SizedBox(width: 8),
+                      StatusDropdown(lead: currentLead),
+                    ],
+                  ),
                   Text('Region: ${currentLead.region.name.toUpperCase()}'),
                   const SizedBox(height: 8),
                   // Last contacted indicator
@@ -353,7 +361,8 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
 
   Widget _buildAssignmentDropdown(BuildContext context, AuthState authState) {
     final assignmentState = ref.watch(leadAssignmentProvider(widget.lead.id));
-    final userListState = ref.watch(userListProvider(widget.lead.region));
+    // Use all active users to support cross-region assignment
+    final userListState = ref.watch(allActiveUsersProvider);
     final leadListState = ref.watch(leadListProvider);
     final userRepository = ref.watch(userRepositoryProvider);
     
@@ -423,12 +432,15 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
                 );
               }
             } else {
-              // Add active users
+              // Add active users (show region for cross-region support)
               for (final user in userListState.users) {
+                final regionLabel = user.region != null 
+                    ? ' (${user.region!.name.toUpperCase()})' 
+                    : '';
                 items.add(
                   DropdownMenuItem<String>(
                     value: user.uid,
-                    child: Text(user.name),
+                    child: Text('${user.name}$regionLabel'),
                   ),
                 );
               }

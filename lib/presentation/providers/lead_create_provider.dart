@@ -12,6 +12,7 @@ class LeadCreateState {
   final UserRegion region;
   final LeadStatus status;
   final String? assignedTo;
+  final String? assignedToName;
   final bool isLoading;
   final Failure? error;
 
@@ -22,6 +23,7 @@ class LeadCreateState {
     this.region = UserRegion.india,
     this.status = LeadStatus.newLead,
     this.assignedTo,
+    this.assignedToName,
     this.isLoading = false,
     this.error,
   });
@@ -33,6 +35,7 @@ class LeadCreateState {
     UserRegion? region,
     LeadStatus? status,
     String? assignedTo,
+    String? assignedToName,
     bool? isLoading,
     Failure? error,
     bool clearLocation = false,
@@ -46,6 +49,7 @@ class LeadCreateState {
       region: region ?? this.region,
       status: status ?? this.status,
       assignedTo: clearAssignedTo ? null : (assignedTo ?? this.assignedTo),
+      assignedToName: clearAssignedTo ? null : (assignedToName ?? this.assignedToName),
       isLoading: isLoading ?? this.isLoading,
       error: clearError ? null : (error ?? this.error),
     );
@@ -91,6 +95,8 @@ class LeadCreateNotifier extends StateNotifier<LeadCreateState> {
   }
 
   void setRegion(UserRegion region) {
+    // Note: We no longer clear assigned user when region changes
+    // to support cross-region assignment (e.g., sales person handling both USA and India)
     state = state.copyWith(region: region);
   }
 
@@ -98,8 +104,12 @@ class LeadCreateNotifier extends StateNotifier<LeadCreateState> {
     state = state.copyWith(status: status);
   }
 
-  void setAssignedTo(String? assignedTo) {
-    state = state.copyWith(assignedTo: assignedTo, clearAssignedTo: assignedTo == null);
+  void setAssignedTo(String? assignedTo, String? assignedToName) {
+    state = state.copyWith(
+      assignedTo: assignedTo,
+      assignedToName: assignedToName,
+      clearAssignedTo: assignedTo == null,
+    );
   }
 
   void reset() {
@@ -126,6 +136,7 @@ class LeadCreateNotifier extends StateNotifier<LeadCreateState> {
         region: state.region,
         status: state.status,
         assignedTo: state.assignedTo?.isEmpty == true ? null : state.assignedTo,
+        assignedToName: state.assignedToName,
         createdAt: now,
         updatedAt: now,
       );

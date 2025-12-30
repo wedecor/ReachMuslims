@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/lead.dart';
@@ -22,14 +23,23 @@ class LeadListScreen extends ConsumerStatefulWidget {
   ConsumerState<LeadListScreen> createState() => _LeadListScreenState();
 }
 
-class _LeadListScreenState extends ConsumerState<LeadListScreen> {
+class _LeadListScreenState extends ConsumerState<LeadListScreen>
+    with SingleTickerProviderStateMixin {
   final _searchController = TextEditingController();
-  final _scrollController = ScrollController();
+  final _scrollControllers = [
+    ScrollController(),
+    ScrollController(),
+    ScrollController(),
+  ];
+  late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(_onScroll);
+    _tabController = TabController(length: 3, vsync: this);
+    for (final controller in _scrollControllers) {
+      controller.addListener(() => _onScroll(controller));
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(leadListProvider.notifier).loadLeads(refresh: true);
     });
@@ -38,13 +48,16 @@ class _LeadListScreenState extends ConsumerState<LeadListScreen> {
   @override
   void dispose() {
     _searchController.dispose();
-    _scrollController.dispose();
+    _tabController.dispose();
+    for (final controller in _scrollControllers) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
-  void _onScroll() {
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent * 0.9) {
+  void _onScroll(ScrollController controller) {
+    if (controller.position.pixels >=
+        controller.position.maxScrollExtent * 0.9) {
       ref.read(leadListProvider.notifier).loadMore();
     }
   }
@@ -60,7 +73,8 @@ class _LeadListScreenState extends ConsumerState<LeadListScreen> {
       appBar: AppBar(
         title: const Text('Leads'),
         actions: [
-          if (isAdmin)
+          // Allow all authenticated users to create leads
+          if (authState.isAuthenticated)
             IconButton(
               icon: const Icon(Icons.add),
               onPressed: () {
@@ -117,21 +131,47 @@ class _LeadListScreenState extends ConsumerState<LeadListScreen> {
           ),
           // Advanced Filters Panel
           const LeadFilterPanel(),
-          // Lead list
+          // Status Tabs
+          TabBar(
+            controller: _tabController,
+            tabs: const [
+              Tab(text: 'New'),
+              Tab(text: 'In Talk'),
+              Tab(text: 'Converted'),
+            ],
+            labelColor: Theme.of(context).colorScheme.primary,
+            unselectedLabelColor: Colors.grey,
+            indicatorColor: Theme.of(context).colorScheme.primary,
+          ),
+          // Tabbed Lead Lists
           Expanded(
-            child: _buildLeadList(leadListState),
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildFilteredLeadList(leadListState, LeadStatus.newLead, _scrollControllers[0]),
+                _buildFilteredLeadList(leadListState, LeadStatus.inTalk, _scrollControllers[1]),
+                _buildFilteredLeadList(leadListState, LeadStatus.converted, _scrollControllers[2]),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildLeadList(LeadListState state) {
-    if (state.isLoading && state.leads.isEmpty) {
+  Widget _buildFilteredLeadList(
+    LeadListState state,
+    LeadStatus status,
+    ScrollController scrollController,
+  ) {
+    // Filter leads by status
+    final filteredLeads = state.leads.where((lead) => lead.status == status).toList();
+
+    if (state.isLoading && filteredLeads.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (state.error != null && state.leads.isEmpty) {
+    if (state.error != null && filteredLeads.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -159,26 +199,36 @@ class _LeadListScreenState extends ConsumerState<LeadListScreen> {
       );
     }
 
-    if (state.leads.isEmpty) {
-      return const Center(
-        child: Text('No leads found'),
+    if (filteredLeads.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.inbox_outlined,
+              size: 64,
+              color: Colors.grey[400],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No ${status.displayName} leads found',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey[600],
+              ),
+            ),
+          ],
+        ),
       );
     }
 
     return RefreshIndicator(
       onRefresh: () => ref.read(leadListProvider.notifier).refresh(),
       child: ListView.builder(
-        controller: _scrollController,
-        itemCount: state.leads.length + (state.hasMore ? 1 : 0),
+        controller: scrollController,
+        itemCount: filteredLeads.length,
         itemBuilder: (context, index) {
-          if (index >= state.leads.length) {
-            return const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Center(child: CircularProgressIndicator()),
-            );
-          }
-
-          final lead = state.leads[index];
+          final lead = filteredLeads[index];
           return _buildLeadItem(lead);
         },
       ),
@@ -186,78 +236,90 @@ class _LeadListScreenState extends ConsumerState<LeadListScreen> {
   }
 
   Widget _buildLeadItem(Lead lead) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      elevation: 1,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: InkWell(
-        onTap: () {
-          try {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => LeadDetailScreen(lead: lead),
-              ),
-            );
-          } catch (e) {
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Error opening lead: ${e.toString()}'),
-                  backgroundColor: Colors.red,
+    try {
+      return Card(
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        elevation: 1,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: InkWell(
+          onTap: () {
+            try {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => LeadDetailScreen(lead: lead),
                 ),
               );
-            }
-          }
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Top row: Star icon (left) + Lead Name (bold) + Status badge (right)
-              Row(
-                children: [
-                  PriorityStarToggle(lead: lead),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      lead.name,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+            } catch (e) {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Error opening lead: ${e.toString()}'),
+                    backgroundColor: Colors.red,
                   ),
-                  const SizedBox(width: 8),
-                  StatusBadge(status: lead.status),
-                ],
-              ),
+                );
+              }
+            }
+          },
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Top row: Star icon (left) + Lead Name (bold) + Status badge (right)
+                Row(
+                  children: [
+                    PriorityStarToggle(lead: lead),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        lead.name,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    StatusDropdown(lead: lead),
+                  ],
+                ),
               const SizedBox(height: 8),
               // Middle row: Phone number (subtle, formatted)
               Text(
-                PhoneNumberFormatter.formatPhoneNumber(lead.phone),
+                PhoneNumberFormatter.formatPhoneNumber(lead.phone, region: lead.region),
                 style: TextStyle(
                   fontSize: 13,
                   color: Colors.grey[700],
                 ),
               ),
-              // Last contacted indicator
-              const SizedBox(height: 8),
-              CompactLastContacted(leadId: lead.id),
-              // Bottom action section: Large Call and WhatsApp buttons
-              const SizedBox(height: 12),
-              LeadCardActionButtons(lead: lead),
-            ],
+                // Last contacted indicator
+                const SizedBox(height: 8),
+                CompactLastContacted(leadId: lead.id),
+                // Bottom action section: Large Call and WhatsApp buttons
+                const SizedBox(height: 12),
+                LeadCardActionButtons(lead: lead),
+              ],
+            ),
           ),
         ),
-      ),
-    );
+      );
+    } catch (e) {
+      debugPrint('Error building lead item: $e');
+      // Return a fallback card if rendering fails
+      return Card(
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Text('Error displaying lead: ${lead.name}'),
+        ),
+      );
+    }
   }
 }
 

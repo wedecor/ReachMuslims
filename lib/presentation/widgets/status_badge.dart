@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../domain/models/lead.dart';
+import '../../core/utils/status_color_utils.dart';
 
-/// Status badge widget showing lead status as a colored chip
+/// Status badge widget showing lead status as a colored chip.
+/// Uses centralized color mapping from StatusColorUtils.
 class StatusBadge extends StatelessWidget {
   final LeadStatus status;
 
@@ -15,7 +17,7 @@ class StatusBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: _getStatusBackgroundColor(status),
+        color: StatusColorUtils.getStatusBackgroundColor(status),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
@@ -23,36 +25,10 @@ class StatusBadge extends StatelessWidget {
         style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w600,
-          color: _getStatusTextColor(status),
+          color: StatusColorUtils.getStatusTextColor(status),
         ),
       ),
     );
-  }
-
-  Color _getStatusBackgroundColor(LeadStatus status) {
-    switch (status) {
-      case LeadStatus.newLead:
-        return Colors.blue[50]!;
-      case LeadStatus.inTalk:
-        return Colors.orange[50]!;
-      case LeadStatus.notInterested:
-        return Colors.red[50]!;
-      case LeadStatus.converted:
-        return Colors.green[50]!;
-    }
-  }
-
-  Color _getStatusTextColor(LeadStatus status) {
-    switch (status) {
-      case LeadStatus.newLead:
-        return Colors.blue[700]!;
-      case LeadStatus.inTalk:
-        return Colors.orange[700]!;
-      case LeadStatus.notInterested:
-        return Colors.red[700]!;
-      case LeadStatus.converted:
-        return Colors.green[700]!;
-    }
   }
 }
 

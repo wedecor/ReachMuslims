@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/lead.dart';
+import '../../domain/models/user.dart';
 import '../providers/lead_edit_provider.dart';
 import '../providers/auth_provider.dart';
+import '../../core/utils/region_based_phone_formatter.dart';
 
 class LeadEditScreen extends ConsumerStatefulWidget {
   final Lead lead;
@@ -27,7 +29,14 @@ class _LeadEditScreenState extends ConsumerState<LeadEditScreen> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.lead.name);
-    _phoneController = TextEditingController(text: widget.lead.phone);
+    // Format phone number based on lead's region
+    final digitsOnly = widget.lead.phone.replaceAll(RegExp(r'[^\d]'), '');
+    final formatter = RegionBasedPhoneFormatter(widget.lead.region);
+    final formatted = formatter.formatEditUpdate(
+      const TextEditingValue(text: ''),
+      TextEditingValue(text: digitsOnly),
+    );
+    _phoneController = TextEditingController(text: formatted.text);
     _locationController = TextEditingController(text: widget.lead.location ?? '');
   }
 
@@ -67,9 +76,12 @@ class _LeadEditScreenState extends ConsumerState<LeadEditScreen> {
       return;
     }
 
+    // Extract only digits from formatted phone number
+    final phoneDigitsOnly = PhoneNumberValidator.getDigitsOnly(_phoneController.text);
+    
     final success = await ref.read(leadEditProvider(widget.lead.id).notifier).updateLead(
           name: _nameController.text.trim(),
-          phone: _phoneController.text.trim(),
+          phone: phoneDigitsOnly,
           location: _locationController.text.trim().isEmpty
               ? null
               : _locationController.text.trim(),
@@ -211,20 +223,16 @@ class _LeadEditScreenState extends ConsumerState<LeadEditScreen> {
                   ),
                   filled: true,
                   fillColor: Colors.grey[50],
+                  hintText: widget.lead.region == UserRegion.usa 
+                      ? '(XXX) XXX-XXXX' 
+                      : 'XXXX-XXXXXX',
                 ),
                 keyboardType: TextInputType.phone,
                 inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
+                  RegionBasedPhoneFormatter(widget.lead.region),
                 ],
                 validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Phone is required';
-                  }
-                  final digitsOnly = value.replaceAll(RegExp(r'[^\d]'), '');
-                  if (digitsOnly.length < 10) {
-                    return 'Please enter a valid phone number (at least 10 digits)';
-                  }
-                  return null;
+                  return PhoneNumberValidator.validate(value, widget.lead.region);
                 },
               ),
               const SizedBox(height: 16),

@@ -73,6 +73,27 @@ class UserRepositoryImpl implements UserRepository {
   }
 
   @override
+  Future<List<User>> getAllActiveUsers() async {
+    try {
+      final snapshot = await _firestore
+          .collection(FirebaseConstants.usersCollection)
+          .where('active', isEqualTo: true)
+          .where('status', isEqualTo: 'approved')
+          .orderBy('name', descending: false)
+          .get();
+
+      return snapshot.docs
+          .map((doc) => UserModel.fromFirestore(doc))
+          .toList();
+    } on FirebaseException catch (e) {
+      throw FirestoreFailure('Failed to fetch active users: ${e.message ?? 'Unknown error'}');
+    } catch (e) {
+      if (e is Failure) rethrow;
+      throw FirestoreFailure('Unexpected error: ${e.toString()}');
+    }
+  }
+
+  @override
   Future<List<User>> getAllUsers() async {
     try {
       final snapshot = await _firestore

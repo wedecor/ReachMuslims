@@ -175,15 +175,18 @@ export const onLeadAssigned = functions.firestore
     if (!before.assignedTo && after.assignedTo) {
       const assignedUserId = after.assignedTo;
       
-      // Verify user is in same region
+      // Verify user exists and is active (allow cross-region assignment)
       const userDoc = await db.collection("users").doc(assignedUserId).get();
       if (!userDoc.exists) return;
       
       const userData = userDoc.data() as User;
-      if (userData.region !== after.region) {
-        console.log(`Skipping notification: user ${assignedUserId} is not in region ${after.region}`);
+      if (!userData.active) {
+        console.log(`Skipping notification: user ${assignedUserId} is not active`);
         return;
       }
+
+      // Note: Region check removed to support cross-region assignment
+      // (e.g., sales person handling both USA and India leads)
 
       await createNotification(
         assignedUserId,
@@ -213,15 +216,17 @@ export const onLeadReassigned = functions.firestore
     ) {
       const newAssignedUserId = after.assignedTo;
       
-      // Verify user is in same region
+      // Verify user exists and is active (allow cross-region assignment)
       const userDoc = await db.collection("users").doc(newAssignedUserId).get();
       if (!userDoc.exists) return;
       
       const userData = userDoc.data() as User;
-      if (userData.region !== after.region) {
-        console.log(`Skipping notification: user ${newAssignedUserId} is not in region ${after.region}`);
+      if (!userData.active) {
+        console.log(`Skipping notification: user ${newAssignedUserId} is not active`);
         return;
       }
+
+      // Note: Region check removed to support cross-region assignment
 
       await createNotification(
         newAssignedUserId,
@@ -247,15 +252,17 @@ export const onLeadStatusChanged = functions.firestore
     if (before.status !== after.status && after.assignedTo) {
       const assignedUserId = after.assignedTo;
       
-      // Verify user is active and in same region
+      // Verify user exists and is active (allow cross-region assignment)
       const userDoc = await db.collection("users").doc(assignedUserId).get();
       if (!userDoc.exists) return;
       
       const userData = userDoc.data() as User;
-      if (userData.region !== after.region) {
-        console.log(`Skipping notification: user ${assignedUserId} is not in region ${after.region}`);
+      if (!userData.active) {
+        console.log(`Skipping notification: user ${assignedUserId} is not active`);
         return;
       }
+
+      // Note: Region check removed to support cross-region assignment
 
       await createNotification(
         assignedUserId,
@@ -286,15 +293,17 @@ export const onFollowUpAdded = functions.firestore
 
     // Only notify if lead is assigned and not the person who created the follow-up
     if (assignedUserId && assignedUserId !== createdBy) {
-      // Verify user is active and in same region
+      // Verify user exists and is active (allow cross-region assignment)
       const userDoc = await db.collection("users").doc(assignedUserId).get();
       if (!userDoc.exists) return;
       
       const userData = userDoc.data() as User;
-      if (userData.region !== leadData.region) {
-        console.log(`Skipping notification: user ${assignedUserId} is not in region ${leadData.region}`);
+      if (!userData.active) {
+        console.log(`Skipping notification: user ${assignedUserId} is not active`);
         return;
       }
+
+      // Note: Region check removed to support cross-region assignment
 
       await createNotification(
         assignedUserId,

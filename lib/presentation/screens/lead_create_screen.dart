@@ -5,6 +5,8 @@ import '../../domain/models/lead.dart';
 import '../../domain/models/user.dart';
 import '../providers/lead_create_provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/user_list_provider.dart';
+import '../../core/utils/region_based_phone_formatter.dart';
 
 class LeadCreateScreen extends ConsumerStatefulWidget {
   const LeadCreateScreen({super.key});
@@ -65,12 +67,12 @@ class _LeadCreateScreenState extends ConsumerState<LeadCreateScreen> {
     final createState = ref.watch(leadCreateProvider);
     final authState = ref.watch(authProvider);
 
-    // Check if user is admin
-    if (!authState.isAdmin) {
+    // Check if user is authenticated
+    if (!authState.isAuthenticated || authState.user == null) {
       return Scaffold(
         appBar: AppBar(title: const Text('Create Lead')),
         body: const Center(
-          child: Text('Access denied. Admin only.'),
+          child: Text('Please log in to create leads.'),
         ),
       );
     }
@@ -118,23 +120,21 @@ class _LeadCreateScreenState extends ConsumerState<LeadCreateScreen> {
                   ),
                   filled: true,
                   fillColor: Colors.grey[50],
+                  hintText: createState.region == UserRegion.usa 
+                      ? '(XXX) XXX-XXXX' 
+                      : 'XXXX-XXXXXX',
                 ),
                 keyboardType: TextInputType.phone,
                 inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
+                  RegionBasedPhoneFormatter(createState.region),
                 ],
                 validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Phone is required';
-                  }
-                  final digitsOnly = value.replaceAll(RegExp(r'[^\d]'), '');
-                  if (digitsOnly.length < 10) {
-                    return 'Please enter a valid phone number (at least 10 digits)';
-                  }
-                  return null;
+                  return PhoneNumberValidator.validate(value, createState.region);
                 },
                 onChanged: (value) {
-                  ref.read(leadCreateProvider.notifier).setPhone(value);
+                  // Store only digits in the provider
+                  final digitsOnly = PhoneNumberValidator.getDigitsOnly(value);
+                  ref.read(leadCreateProvider.notifier).setPhone(digitsOnly);
                 },
               ),
               const SizedBox(height: 16),
@@ -174,6 +174,17 @@ class _LeadCreateScreenState extends ConsumerState<LeadCreateScreen> {
                 onChanged: (region) {
                   if (region != null) {
                     ref.read(leadCreateProvider.notifier).setRegion(region);
+                    // Update phone field formatting when region changes
+                    final currentPhone = _phoneController.text;
+                    if (currentPhone.isNotEmpty) {
+                      final digitsOnly = PhoneNumberValidator.getDigitsOnly(currentPhone);
+                      final formatter = RegionBasedPhoneFormatter(region);
+                      final formatted = formatter.formatEditUpdate(
+                        TextEditingValue(text: currentPhone),
+                        TextEditingValue(text: digitsOnly),
+                      );
+                      _phoneController.value = formatted;
+                    }
                   }
                 },
               ),
@@ -202,20 +213,8 @@ class _LeadCreateScreenState extends ConsumerState<LeadCreateScreen> {
                 },
               ),
               const SizedBox(height: 16),
-              // Assigned To field (optional)
-              TextFormField(
-                decoration: InputDecoration(
-                  labelText: 'Assigned To (User UID, optional)',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  filled: true,
-                  fillColor: Colors.grey[50],
-                ),
-                onChanged: (value) {
-                  ref.read(leadCreateProvider.notifier).setAssignedTo(value.isEmpty ? null : value);
-                },
-              ),
+              // Assigned To dropdown (optional)
+              _buildAssignedUserDropdown(createState),
               const SizedBox(height: 32),
               // Error message
               if (createState.error != null)
@@ -259,6 +258,61 @@ class _LeadCreateScreenState extends ConsumerState<LeadCreateScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildAssignedUserDropdown(LeadCreateState createState) {
+    // Use all active users to support cross-region assignment
+    final userListState = ref.watch(allActiveUsersProvider);
+
+    return DropdownButtonFormField<String?>(
+      value: createState.assignedTo,
+      decoration: InputDecoration(
+        labelText: 'Assigned To (optional)',
+        hintText: 'Select user from any region',
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        filled: true,
+        fillColor: Colors.grey[50],
+      ),
+      items: [
+        const DropdownMenuItem<String?>(
+          value: null,
+          child: Text('Unassigned'),
+        ),
+        if (userListState.isLoading)
+          const DropdownMenuItem<String>(
+            value: 'loading',
+            enabled: false,
+            child: Text('Loading users...'),
+          )
+        else
+          ...userListState.users.map((user) {
+            // Show user name with region in parentheses
+            final regionLabel = user.region != null 
+                ? ' (${user.region!.name.toUpperCase()})' 
+                : '';
+            return DropdownMenuItem<String>(
+              value: user.uid,
+              child: Text('${user.name}$regionLabel'),
+            );
+          }),
+      ],
+      onChanged: (userId) {
+        if (userId == null) {
+          ref.read(leadCreateProvider.notifier).setAssignedTo(null, null);
+        } else {
+          final selectedUser = userListState.users.firstWhere(
+            (u) => u.uid == userId,
+            orElse: () => throw Exception('User not found'),
+          );
+          ref.read(leadCreateProvider.notifier).setAssignedTo(
+                selectedUser.uid,
+                selectedUser.name,
+              );
+        }
+      },
     );
   }
 }

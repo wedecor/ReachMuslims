@@ -1,10 +1,35 @@
-/// Utility for formatting phone numbers for display only
+import '../../domain/models/user.dart';
+
+/// Utility for formatting phone numbers for display based on region
 /// Does NOT modify stored values
 class PhoneNumberFormatter {
-  /// Formats a phone number string for display
-  /// Handles common formats: +91, +1, etc.
-  /// Returns formatted string or original if formatting fails
-  static String formatPhoneNumber(String phone) {
+  /// Formats a phone number string for display based on region
+  /// - USA: (XXX) XXX-XXXX
+  /// - India: XXXX-XXXXXX
+  static String formatPhoneNumber(String phone, {UserRegion? region}) {
+    if (phone.isEmpty) return phone;
+
+    // Remove all non-digit characters
+    final digitsOnly = phone.replaceAll(RegExp(r'[^\d]'), '');
+    
+    if (digitsOnly.length != 10) {
+      // If not 10 digits, return original (might have country code)
+      return phone;
+    }
+
+    // Format based on region
+    if (region == UserRegion.usa) {
+      // USA format: (XXX) XXX-XXXX
+      return '(${digitsOnly.substring(0, 3)}) ${digitsOnly.substring(3, 6)}-${digitsOnly.substring(6)}';
+    } else {
+      // India format: XXXX-XXXXXX
+      return '${digitsOnly.substring(0, 4)}-${digitsOnly.substring(4)}';
+    }
+  }
+
+  /// Legacy method for backward compatibility
+  /// Tries to auto-detect format from phone string
+  static String formatPhoneNumberLegacy(String phone) {
     if (phone.isEmpty) return phone;
 
     // Remove all non-digit characters except +
@@ -44,7 +69,7 @@ class PhoneNumberFormatter {
     
     // For numbers without country code, try to format as local number
     if (cleaned.length == 10 && !cleaned.startsWith('+')) {
-      // Format: (555) 123-4567
+      // Format: (555) 123-4567 (assume USA format)
       return '(${cleaned.substring(0, 3)}) ${cleaned.substring(3, 6)}-${cleaned.substring(6)}';
     }
     

@@ -6,7 +6,7 @@ import '../../domain/models/user.dart';
 import '../../domain/repositories/follow_up_repository.dart';
 import '../../domain/repositories/lead_repository.dart';
 import '../utils/whatsapp_message_helper.dart';
-import '../errors/failures.dart';
+import '../utils/region_based_phone_formatter.dart';
 
 /// UI-agnostic service for lead actions (Call, WhatsApp)
 /// Handles intent launch, follow-up logging, and lastContactedAt updates
@@ -34,6 +34,40 @@ class LeadActionsService {
     } catch (_) {
       return false;
     }
+  }
+
+  /// Normalizes a lead's phone for WhatsApp `wa.me` links.
+  /// - Expects only digits (no formatting) in [lead.phone]
+  /// - Adds country code based on [lead.region] if missing
+  /// - Returns `null` if we can't build a valid international number
+  String? _buildWhatsAppPhone(Lead lead) {
+    final digitsOnly = PhoneNumberValidator.getDigitsOnly(lead.phone);
+    if (digitsOnly.isEmpty) return null;
+
+    // If the number already looks like it has a country code, keep it
+    // India: 91 + 10 digits = 12 digits
+    // USA: 1 + 10 digits = 11 digits
+    if ((digitsOnly.length == 12 && digitsOnly.startsWith('91')) ||
+        (digitsOnly.length == 11 && digitsOnly.startsWith('1'))) {
+      return digitsOnly;
+    }
+
+    // If it's just 10 digits, prepend country code based on region
+    if (digitsOnly.length == 10) {
+      switch (lead.region) {
+        case UserRegion.india:
+          return '91$digitsOnly';
+        case UserRegion.usa:
+          return '1$digitsOnly';
+      }
+    }
+
+    // Fallback: if it's between 11-15 digits, assume it's already in intl format
+    if (digitsOnly.length >= 11 && digitsOnly.length <= 15) {
+      return digitsOnly;
+    }
+
+    return null;
   }
 
   /// Initiates a call to the lead
@@ -69,6 +103,11 @@ class LeadActionsService {
       return false;
     }
 
+    final waPhone = _buildWhatsAppPhone(lead);
+    if (waPhone == null) {
+      return false;
+    }
+
     final message = WhatsAppMessageHelper.buildMessage(
       region: lead.region,
       type: WhatsAppMessageType.initial,
@@ -76,7 +115,7 @@ class LeadActionsService {
     );
 
     final uri = WhatsAppMessageHelper.buildWhatsAppUri(
-      phoneWithCountryCode: lead.phone,
+      phoneWithCountryCode: waPhone,
       message: message,
     );
 
@@ -105,6 +144,11 @@ class LeadActionsService {
       return false;
     }
 
+    final waPhone = _buildWhatsAppPhone(lead);
+    if (waPhone == null) {
+      return false;
+    }
+
     final message = WhatsAppMessageHelper.buildMessage(
       region: lead.region,
       type: WhatsAppMessageType.followUp,
@@ -112,7 +156,7 @@ class LeadActionsService {
     );
 
     final uri = WhatsAppMessageHelper.buildWhatsAppUri(
-      phoneWithCountryCode: lead.phone,
+      phoneWithCountryCode: waPhone,
       message: message,
     );
 

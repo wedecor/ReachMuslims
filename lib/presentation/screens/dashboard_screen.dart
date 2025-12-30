@@ -72,7 +72,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       appBar: AppBar(
         title: const Text('Dashboard'),
         actions: [
-          if (isAdmin)
+          // Allow all authenticated users to create leads
+          if (authState.isAuthenticated)
             IconButton(
               icon: const Icon(Icons.add),
               onPressed: () {
@@ -563,7 +564,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               const SizedBox(height: 8),
               // Middle row: Phone number (subtle, formatted)
               Text(
-                PhoneNumberFormatter.formatPhoneNumber(lead.phone),
+                PhoneNumberFormatter.formatPhoneNumber(lead.phone, region: lead.region),
                 style: TextStyle(
                   fontSize: 13,
                   color: Colors.grey[700],

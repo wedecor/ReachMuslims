@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/lead.dart';
 import '../../domain/repositories/lead_repository.dart';
@@ -228,6 +229,8 @@ class LeadListNotifier extends StateNotifier<LeadListState> {
         );
       }
     } catch (e) {
+      debugPrint('Error loading leads: $e');
+      debugPrint('Stack trace: ${StackTrace.current}');
       state = state.copyWith(
         isLoading: false,
         isLoadingMore: false,

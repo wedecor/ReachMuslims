@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../domain/models/lead.dart';
 import '../../domain/models/user.dart';
+import '../../core/utils/status_color_utils.dart';
 import '../providers/lead_filter_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/user_list_provider.dart';
@@ -136,8 +137,18 @@ class _LeadFilterPanelState extends ConsumerState<LeadFilterPanel> {
           children: LeadStatus.values.map((status) {
             final isSelected = filterState.statuses.contains(status);
             return FilterChip(
-              label: Text(status.displayName),
+              label: Text(
+                status.displayName,
+                style: TextStyle(
+                  color: isSelected
+                      ? StatusColorUtils.getStatusTextColor(status)
+                      : null,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                ),
+              ),
               selected: isSelected,
+              selectedColor: StatusColorUtils.getStatusBackgroundColor(status),
+              checkmarkColor: StatusColorUtils.getStatusTextColor(status),
               onSelected: (selected) {
                 ref.read(leadFilterProvider.notifier).toggleStatus(status);
                 ref.read(leadListProvider.notifier).refresh();
