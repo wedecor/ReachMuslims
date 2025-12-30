@@ -29,12 +29,12 @@ class FollowUpTimelineWidget extends ConsumerWidget {
             Icon(
               Icons.error_outline,
               size: 48,
-              color: Colors.red[300],
+              color: Theme.of(context).colorScheme.error,
             ),
             const SizedBox(height: 8),
             Text(
               'Error loading follow-ups: ${followUpState.error!.message}',
-              style: const TextStyle(color: Colors.red),
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
               textAlign: TextAlign.center,
             ),
           ],
@@ -50,13 +50,13 @@ class FollowUpTimelineWidget extends ConsumerWidget {
             Icon(
               Icons.history,
               size: 48,
-              color: Colors.grey[400],
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
             const SizedBox(height: 8),
             Text(
               'No follow-ups yet',
               style: TextStyle(
-                color: Colors.grey[600],
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
                 fontSize: 16,
               ),
             ),
@@ -93,13 +93,17 @@ class FollowUpTimelineWidget extends ConsumerWidget {
                 Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: isWhatsApp ? Colors.green[50] : Colors.blue[50],
+                    color: isWhatsApp 
+                        ? Theme.of(context).colorScheme.primaryContainer 
+                        : Theme.of(context).colorScheme.secondaryContainer,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
                     isWhatsApp ? Icons.chat : Icons.note,
                     size: 18,
-                    color: isWhatsApp ? Colors.green[700] : Colors.blue[700],
+                    color: isWhatsApp 
+                        ? Theme.of(context).colorScheme.onPrimaryContainer 
+                        : Theme.of(context).colorScheme.onSecondaryContainer,
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -108,7 +112,9 @@ class FollowUpTimelineWidget extends ConsumerWidget {
                   isWhatsApp ? 'WhatsApp' : 'Note',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: isWhatsApp ? Colors.green[700] : Colors.blue[700],
+                    color: isWhatsApp 
+                        ? Theme.of(context).colorScheme.onPrimaryContainer 
+                        : Theme.of(context).colorScheme.onSecondaryContainer,
                     fontSize: 14,
                   ),
                 ),
@@ -118,7 +124,7 @@ class FollowUpTimelineWidget extends ConsumerWidget {
                   TimeAgoHelper.formatTimelineDate(followUp.createdAt),
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.grey[600],
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -137,14 +143,14 @@ class FollowUpTimelineWidget extends ConsumerWidget {
                   Icon(
                     Icons.person,
                     size: 14,
-                    color: Colors.grey[600],
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(width: 4),
                   Text(
                     'Contacted by ${followUp.createdByName}',
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.grey[600],
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],

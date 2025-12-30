@@ -33,19 +33,21 @@ class LeadActionButtons extends ConsumerWidget {
         mode: LaunchMode.externalApplication,
       );
       if (!launched && context.mounted) {
+        final colorScheme = Theme.of(context).colorScheme;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Unable to open the requested app.'),
-            backgroundColor: Colors.red,
+          SnackBar(
+            content: const Text('Unable to open the requested app.'),
+            backgroundColor: colorScheme.error,
           ),
         );
       }
     } catch (_) {
       if (context.mounted) {
+        final colorScheme = Theme.of(context).colorScheme;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Unable to open the requested app.'),
-            backgroundColor: Colors.red,
+          SnackBar(
+            content: const Text('Unable to open the requested app.'),
+            backgroundColor: colorScheme.error,
           ),
         );
       }
@@ -54,10 +56,11 @@ class LeadActionButtons extends ConsumerWidget {
 
   Future<void> _handleCall(BuildContext context) async {
     if (lead.phone.isEmpty) {
+      final colorScheme = Theme.of(context).colorScheme;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No phone number available for this lead.'),
-          backgroundColor: Colors.red,
+        SnackBar(
+          content: const Text('No phone number available for this lead.'),
+          backgroundColor: colorScheme.error,
         ),
       );
       return;
@@ -69,10 +72,11 @@ class LeadActionButtons extends ConsumerWidget {
 
   Future<void> _handleWhatsAppInitial(BuildContext context) async {
     if (lead.phone.isEmpty) {
+      final colorScheme = Theme.of(context).colorScheme;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No phone number available for this lead.'),
-          backgroundColor: Colors.red,
+        SnackBar(
+          content: const Text('No phone number available for this lead.'),
+          backgroundColor: colorScheme.error,
         ),
       );
       return;
@@ -93,11 +97,12 @@ class LeadActionButtons extends ConsumerWidget {
   }
 
   Future<void> _handleWhatsAppFollowUp(BuildContext context, WidgetRef ref) async {
+    final colorScheme = Theme.of(context).colorScheme;
     if (lead.phone.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No phone number available for this lead.'),
-          backgroundColor: Colors.red,
+        SnackBar(
+          content: const Text('No phone number available for this lead.'),
+          backgroundColor: colorScheme.error,
         ),
       );
       return;
@@ -108,9 +113,9 @@ class LeadActionButtons extends ConsumerWidget {
     if (user == null) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('User not authenticated.'),
-            backgroundColor: Colors.red,
+          SnackBar(
+            content: const Text('User not authenticated.'),
+            backgroundColor: colorScheme.error,
           ),
         );
       }
@@ -146,10 +151,11 @@ class LeadActionButtons extends ConsumerWidget {
       );
     } catch (_) {
       if (context.mounted) {
+        final colorScheme = Theme.of(context).colorScheme;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to log WhatsApp follow-up.'),
-            backgroundColor: Colors.red,
+          SnackBar(
+            content: const Text('Failed to log WhatsApp follow-up.'),
+            backgroundColor: colorScheme.error,
           ),
         );
       }

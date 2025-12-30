@@ -40,10 +40,10 @@ class AuthGuard extends ConsumerWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
+              Icon(
                 Icons.pending_outlined,
                 size: 64,
-                color: Colors.orange,
+                color: Theme.of(context).colorScheme.tertiary,
               ),
               const SizedBox(height: 16),
               const Text(
@@ -54,9 +54,9 @@ class AuthGuard extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
+              Text(
                 'Your access request is pending admin approval.',
-                style: TextStyle(color: Colors.grey),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
               ),
               const SizedBox(height: 24),
               ElevatedButton(
@@ -78,10 +78,10 @@ class AuthGuard extends ConsumerWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
+              Icon(
                 Icons.block,
                 size: 64,
-                color: Colors.red,
+                color: Theme.of(context).colorScheme.error,
               ),
               const SizedBox(height: 16),
               const Text(
@@ -92,9 +92,9 @@ class AuthGuard extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
+              Text(
                 'Your account has been deactivated.',
-                style: TextStyle(color: Colors.grey),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
               ),
               const SizedBox(height: 24),
               ElevatedButton(

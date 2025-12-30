@@ -41,7 +41,7 @@ class NotificationBadge extends ConsumerWidget {
           child: Container(
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              color: Colors.red,
+              color: Theme.of(context).colorScheme.error,
               shape: BoxShape.circle,
             ),
             constraints: const BoxConstraints(
@@ -50,8 +50,8 @@ class NotificationBadge extends ConsumerWidget {
             ),
             child: Text(
               unreadCount > 9 ? '9+' : unreadCount.toString(),
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onError,
                 fontSize: 10,
                 fontWeight: FontWeight.bold,
               ),
@@ -144,11 +144,11 @@ class NotificationSheet extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+            Icon(Icons.error_outline, size: 64, color: Theme.of(context).colorScheme.error),
             const SizedBox(height: 16),
             Text(
               'Error: ${state.error!.message}',
-              style: const TextStyle(color: Colors.red),
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
               textAlign: TextAlign.center,
             ),
           ],
@@ -161,11 +161,11 @@ class NotificationSheet extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.notifications_none, size: 64, color: Colors.grey),
-            SizedBox(height: 16),
+            Icon(Icons.notifications_none, size: 64, color: Theme.of(context).colorScheme.onSurfaceVariant),
+            const SizedBox(height: 16),
             Text(
               'No notifications',
-              style: TextStyle(color: Colors.grey),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
             ),
           ],
         ),
@@ -189,10 +189,14 @@ class NotificationSheet extends ConsumerWidget {
   ) {
     return ListTile(
       leading: CircleAvatar(
-        backgroundColor: notification.read ? Colors.grey[300] : Colors.blue,
+        backgroundColor: notification.read 
+            ? Theme.of(context).colorScheme.surfaceContainerHighest 
+            : Theme.of(context).colorScheme.primary,
         child: Icon(
           _getNotificationIcon(notification.type),
-          color: notification.read ? Colors.grey[600] : Colors.white,
+          color: notification.read 
+              ? Theme.of(context).colorScheme.onSurfaceVariant 
+              : Theme.of(context).colorScheme.onPrimary,
           size: 20,
         ),
       ),
@@ -211,14 +215,14 @@ class NotificationSheet extends ConsumerWidget {
             dateFormat.format(notification.createdAt),
             style: TextStyle(
               fontSize: 12,
-              color: Colors.grey[600],
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
         ],
       ),
       trailing: notification.read
           ? null
-          : const Icon(Icons.circle, size: 8, color: Colors.blue),
+          : Icon(Icons.circle, size: 8, color: Theme.of(context).colorScheme.primary),
       onTap: () {
         if (!notification.read) {
           ref.read(notificationListProvider(userId).notifier).markAsRead(notification.id);
