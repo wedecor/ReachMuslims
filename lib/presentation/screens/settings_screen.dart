@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
+import '../providers/theme_provider.dart';
 import '../../core/errors/failures.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -268,6 +269,50 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   title: const Text('Change Password'),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: _showChangePasswordDialog,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          // Appearance Section
+          Card(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    'Appearance',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const Divider(height: 1),
+                Consumer(
+                  builder: (context, ref, child) {
+                    final currentTheme = ref.watch(themeProvider);
+                    return ListTile(
+                      leading: const Icon(Icons.dark_mode_outlined),
+                      title: const Text('Theme'),
+                      subtitle: Text(currentTheme.displayName),
+                      trailing: DropdownButton<ThemeModeOption>(
+                        value: currentTheme,
+                        underline: const SizedBox(),
+                        items: ThemeModeOption.values.map((option) {
+                          return DropdownMenuItem(
+                            value: option,
+                            child: Text(option.displayName),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          if (value != null) {
+                            ref.read(themeProvider.notifier).setTheme(value);
+                          }
+                        },
+                      ),
+                    );
+                  },
                 ),
               ],
             ),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 enum DrawerMenuItemType {
   leads,
   notifications,
+  myTasks,
   dashboard,
   pendingRequests,
   userManagement,
@@ -48,6 +49,13 @@ class DrawerMenuItem {
         selectedIcon: Icons.notifications,
         showBadge: true,
         route: '/notifications',
+      ),
+      const DrawerMenuItem(
+        type: DrawerMenuItemType.myTasks,
+        title: 'My Tasks',
+        icon: Icons.task_outlined,
+        selectedIcon: Icons.task,
+        route: '/my-tasks',
       ),
       const DrawerMenuItem(
         type: DrawerMenuItemType.dashboard,

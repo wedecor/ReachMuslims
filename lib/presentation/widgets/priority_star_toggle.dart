@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/lead.dart';
 import '../providers/auth_provider.dart';
 import '../providers/lead_list_provider.dart';
+import '../providers/connectivity_provider.dart';
+import '../providers/offline_sync_provider.dart';
 import '../../domain/repositories/lead_repository.dart';
 import '../../data/repositories/lead_repository_impl.dart';
 import '../../core/errors/failures.dart';
@@ -73,8 +75,19 @@ class _PriorityStarToggleState extends ConsumerState<PriorityStarToggle> {
     });
 
     try {
+      // Mark write as pending if offline
+      final connectivityState = ref.read(connectivityProvider);
+      if (!connectivityState.isOnline) {
+        ref.read(offlineSyncProvider.notifier).markWritePending();
+      }
+
       final leadRepository = ref.read(leadRepositoryProvider);
       await leadRepository.updatePriority(widget.lead.id, _optimisticPriority);
+
+      // Mark as synced if online
+      if (connectivityState.isOnline) {
+        ref.read(offlineSyncProvider.notifier).markWriteSynced();
+      }
 
       // Refresh lead list to get updated data
       ref.read(leadListProvider.notifier).refresh();

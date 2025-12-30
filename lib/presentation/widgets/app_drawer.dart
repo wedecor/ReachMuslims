@@ -11,6 +11,7 @@ import '../screens/users_screen.dart';
 import '../screens/reports_screen.dart';
 import '../screens/settings_screen.dart';
 import '../screens/about_screen.dart';
+import '../screens/my_tasks_screen.dart';
 import '../../domain/models/user.dart';
 
 class AppDrawer extends ConsumerWidget {
@@ -280,6 +281,9 @@ class AppDrawer extends ConsumerWidget {
         return;
       case DrawerMenuItemType.notifications:
         screen = const NotificationInboxScreen();
+        break;
+      case DrawerMenuItemType.myTasks:
+        screen = const MyTasksScreen();
         break;
       case DrawerMenuItemType.dashboard:
         screen = const DashboardScreen();

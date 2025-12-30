@@ -15,7 +15,10 @@ import '../widgets/follow_up_timeline_widget.dart';
 import '../widgets/lead_edit_history_timeline_widget.dart';
 import '../widgets/status_dropdown.dart';
 import '../../core/utils/phone_number_formatter.dart';
+import '../providers/scheduled_followup_provider.dart';
+import '../../domain/models/scheduled_followup.dart';
 import 'lead_edit_screen.dart';
+import 'package:intl/intl.dart';
 
 class LeadDetailScreen extends ConsumerStatefulWidget {
   final Lead lead;
@@ -64,7 +67,8 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error: ${error.message}'),
-            backgroundColor: Colors.red,
+            backgroundColor: Theme.of(context).colorScheme.errorContainer,
+            behavior: SnackBarBehavior.floating,
           ),
         );
       }
@@ -117,7 +121,7 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
               icon: const Icon(Icons.delete_outline),
               onPressed: () => _handleDelete(context, currentLead),
               tooltip: 'Delete Lead',
-              color: Colors.red,
+              color: Theme.of(context).colorScheme.error,
             ),
         ],
       ),
@@ -149,6 +153,20 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
                   Text('Phone: ${PhoneNumberFormatter.formatPhoneNumber(currentLead.phone, region: currentLead.region)}'),
                   if (currentLead.location != null)
                     Text('Location: ${currentLead.location}'),
+                  // Source label (read-only)
+                  Row(
+                    children: [
+                      const Text('Source: '),
+                      Chip(
+                        label: Text(
+                          currentLead.source.displayName,
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                    ],
+                  ),
                   // Status dropdown - editable
                   Row(
                     children: [
@@ -173,63 +191,91 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
           ),
           // Follow-Up Input Section
           if (authState.isAuthenticated && authState.user?.active == true)
-            Container(
-              padding: const EdgeInsets.all(8.0),
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                border: Border(
-                  top: BorderSide(color: Colors.grey[300]!),
-                  bottom: BorderSide(color: Colors.grey[300]!),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  TextField(
-                    controller: _noteController,
-                    maxLines: 3,
-                    decoration: InputDecoration(
-                      hintText: 'Add a follow-up note...',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
-                      contentPadding: const EdgeInsets.all(12),
+            Builder(
+              builder: (context) {
+                final theme = Theme.of(context);
+                final colorScheme = theme.colorScheme;
+                return Container(
+                  padding: const EdgeInsets.all(8.0),
+                  decoration: BoxDecoration(
+                    color: colorScheme.surfaceContainerHighest,
+                    border: Border(
+                      top: BorderSide(color: colorScheme.outline.withOpacity(0.3)),
+                      bottom: BorderSide(color: colorScheme.outline.withOpacity(0.3)),
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    height: 40,
-                    child: ElevatedButton(
-                      onPressed: addFollowUpState.isLoading ? null : _handleAddFollowUp,
-                      style: ElevatedButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      TextField(
+                        controller: _noteController,
+                        maxLines: 3,
+                        style: TextStyle(color: colorScheme.onSurface),
+                        decoration: InputDecoration(
+                          hintText: 'Add a follow-up note...',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          filled: true,
+                          fillColor: colorScheme.surfaceContainerHighest,
+                          contentPadding: const EdgeInsets.all(12),
                         ),
                       ),
-                      child: addFollowUpState.isLoading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: SizedBox(
+                          height: 40,
+                          child: ElevatedButton.icon(
+                            onPressed: addFollowUpState.isLoading ? null : _handleAddFollowUp,
+                            style: ElevatedButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                            )
-                          : const Text('Add Follow-Up'),
-                    ),
-                  ),
-                  if (addFollowUpState.error != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
-                      child: Text(
-                        addFollowUpState.error!.message,
-                        style: const TextStyle(color: Colors.red, fontSize: 12),
+                            ),
+                            icon: addFollowUpState.isLoading
+                                ? SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(colorScheme.onPrimary),
+                                    ),
+                                  )
+                                : const Icon(Icons.note_add, size: 18),
+                            label: const Text('Add Follow-Up'),
+                          ),
+                        ),
                       ),
-                    ),
-                ],
-              ),
+                      const SizedBox(width: 8),
+                      SizedBox(
+                        height: 40,
+                        child: OutlinedButton.icon(
+                          onPressed: () => _showScheduleFollowUpDialog(context, currentLead.id),
+                          style: OutlinedButton.styleFrom(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          icon: const Icon(Icons.schedule, size: 18),
+                          label: const Text('Schedule'),
+                        ),
+                      ),
+                    ],
+                  ),
+                      if (addFollowUpState.error != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: Text(
+                            addFollowUpState.error!.message,
+                            style: TextStyle(color: colorScheme.error, fontSize: 12),
+                          ),
+                        ),
+                    ],
+                  ),
+                );
+              },
             ),
           // History Tabs (Follow-ups and Edit History)
           Expanded(
@@ -249,7 +295,7 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
                       ),
                     ],
                     labelColor: Theme.of(context).colorScheme.primary,
-                    unselectedLabelColor: Colors.grey,
+                    unselectedLabelColor: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                   Expanded(
                     child: TabBarView(
@@ -317,8 +363,8 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
             ),
             child: const Text('Delete'),
           ),
@@ -339,9 +385,10 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
 
     if (success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Lead deleted successfully'),
-          backgroundColor: Colors.green,
+        SnackBar(
+          content: const Text('Lead deleted successfully'),
+          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+          behavior: SnackBarBehavior.floating,
         ),
       );
       // Navigate back to lead list
@@ -352,11 +399,260 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error: ${error.message}'),
-            backgroundColor: Colors.red,
+            backgroundColor: Theme.of(context).colorScheme.errorContainer,
+            behavior: SnackBarBehavior.floating,
           ),
         );
       }
     }
+  }
+
+  Future<void> _showScheduleFollowUpDialog(BuildContext context, String leadId) async {
+    final authState = ref.read(authProvider);
+    if (authState.user == null) return;
+
+    DateTime? selectedDate;
+    TimeOfDay? selectedTime;
+    final noteController = TextEditingController();
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Schedule Follow-up'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Date picker
+                ListTile(
+                  title: const Text('Date'),
+                  subtitle: Text(
+                    selectedDate == null
+                        ? 'Select date'
+                        : DateFormat('MMM dd, yyyy').format(selectedDate!),
+                  ),
+                  trailing: const Icon(Icons.calendar_today),
+                  onTap: () async {
+                    final date = await showDatePicker(
+                      context: context,
+                      initialDate: DateTime.now().add(const Duration(days: 1)),
+                      firstDate: DateTime.now(),
+                      lastDate: DateTime.now().add(const Duration(days: 365)),
+                    );
+                    if (date != null) {
+                      setState(() => selectedDate = date);
+                    }
+                  },
+                ),
+                // Time picker
+                ListTile(
+                  title: const Text('Time'),
+                  subtitle: Text(
+                    selectedTime == null
+                        ? 'Select time'
+                        : selectedTime!.format(context),
+                  ),
+                  trailing: const Icon(Icons.access_time),
+                  onTap: () async {
+                    final time = await showTimePicker(
+                      context: context,
+                      initialTime: TimeOfDay.now(),
+                    );
+                    if (time != null) {
+                      setState(() => selectedTime = time);
+                    }
+                  },
+                ),
+                const SizedBox(height: 16),
+                // Note field
+                TextField(
+                  controller: noteController,
+                  decoration: const InputDecoration(
+                    labelText: 'Note (optional)',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 3,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: (selectedDate != null && selectedTime != null)
+                  ? () => Navigator.pop(context, true)
+                  : null,
+              child: const Text('Schedule'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (result == true && selectedDate != null && selectedTime != null && mounted) {
+      final scheduledDateTime = DateTime(
+        selectedDate!.year,
+        selectedDate!.month,
+        selectedDate!.day,
+        selectedTime!.hour,
+        selectedTime!.minute,
+      );
+
+      final success = await ref
+          .read(scheduledFollowUpListProvider(leadId).notifier)
+          .createScheduledFollowUp(
+            scheduledAt: scheduledDateTime,
+            note: noteController.text.trim().isEmpty ? null : noteController.text.trim(),
+            createdBy: authState.user!.uid,
+          );
+
+      noteController.dispose();
+
+      if (success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Follow-up scheduled successfully'),
+            backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      } else if (mounted) {
+        final error = ref.read(scheduledFollowUpListProvider(leadId)).error;
+        if (error != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: ${error.message}'),
+              backgroundColor: Theme.of(context).colorScheme.errorContainer,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+    } else {
+      noteController.dispose();
+    }
+  }
+
+  Widget _buildScheduledFollowUpsSection(String leadId, AuthState authState) {
+    if (!authState.isAuthenticated || authState.user == null) {
+      return const SizedBox.shrink();
+    }
+
+    final scheduledState = ref.watch(scheduledFollowUpListProvider(leadId));
+    final pendingFollowUps = scheduledState.scheduledFollowUps
+        .where((sf) => sf.status == ScheduledFollowUpStatus.pending)
+        .toList()
+      ..sort((a, b) => a.scheduledAt.compareTo(b.scheduledAt));
+
+    if (pendingFollowUps.isEmpty && !scheduledState.isLoading) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      margin: const EdgeInsets.all(8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.blue[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.blue[200]!),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.schedule, size: 20, color: Colors.blue),
+              const SizedBox(width: 8),
+              Text(
+                'Scheduled Follow-ups',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue[900],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          if (scheduledState.isLoading)
+            const Center(child: CircularProgressIndicator())
+          else
+            ...pendingFollowUps.map((sf) => _buildScheduledFollowUpItem(sf, leadId)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildScheduledFollowUpItem(ScheduledFollowUp scheduledFollowUp, String leadId) {
+    final now = DateTime.now();
+    final isOverdue = scheduledFollowUp.scheduledAt.isBefore(now);
+    final dateFormat = DateFormat('MMM dd, yyyy hh:mm a');
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        leading: Icon(
+          isOverdue ? Icons.warning : Icons.schedule,
+          color: isOverdue ? Colors.orange : Colors.blue,
+        ),
+        title: Text(
+          dateFormat.format(scheduledFollowUp.scheduledAt),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: isOverdue ? Colors.orange[900] : null,
+          ),
+        ),
+        subtitle: scheduledFollowUp.note != null && scheduledFollowUp.note!.isNotEmpty
+            ? Text(scheduledFollowUp.note!)
+            : null,
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.check, size: 20),
+              color: Theme.of(context).colorScheme.primary,
+              onPressed: () async {
+                final success = await ref
+                    .read(scheduledFollowUpListProvider(leadId).notifier)
+                    .markAsCompleted(scheduledFollowUp.id);
+                if (success && mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: const Text('Marked as completed'),
+                      backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              },
+              tooltip: 'Mark as completed',
+            ),
+            IconButton(
+              icon: const Icon(Icons.close, size: 20),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              onPressed: () async {
+                final success = await ref
+                    .read(scheduledFollowUpListProvider(leadId).notifier)
+                    .deleteScheduledFollowUp(scheduledFollowUp.id);
+                if (success && mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: const Text('Reminder deleted'),
+                      backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              },
+              tooltip: 'Delete',
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildAssignmentDropdown(BuildContext context, AuthState authState) {
@@ -496,12 +792,13 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
 
             return DropdownButtonFormField<String?>(
               value: dropdownValue,
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
               decoration: InputDecoration(
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
                 filled: true,
-                fillColor: Colors.grey[50],
+                fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
               ),
               items: items,
@@ -529,7 +826,8 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
                             content: Text(newUserId != null
                                 ? 'Lead assigned successfully'
                                 : 'Lead unassigned successfully'),
-                            backgroundColor: Colors.green,
+                            backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                            behavior: SnackBarBehavior.floating,
                           ),
                         );
                         // Refresh lead list to get updated lead
@@ -540,7 +838,8 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text('Error: ${error.message}'),
-                              backgroundColor: Colors.red,
+                              backgroundColor: Theme.of(context).colorScheme.errorContainer,
+                              behavior: SnackBarBehavior.floating,
                             ),
                           );
                         }

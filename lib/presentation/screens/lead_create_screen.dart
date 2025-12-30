@@ -6,7 +6,10 @@ import '../../domain/models/user.dart';
 import '../providers/lead_create_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/user_list_provider.dart';
+import '../providers/lead_list_provider.dart';
 import '../../core/utils/region_based_phone_formatter.dart';
+import '../../core/utils/phone_number_formatter.dart';
+import 'lead_detail_screen.dart';
 
 class LeadCreateScreen extends ConsumerStatefulWidget {
   const LeadCreateScreen({super.key});
@@ -39,23 +42,81 @@ class _LeadCreateScreenState extends ConsumerState<LeadCreateScreen> {
       return;
     }
 
+    // Check for duplicate phone number
+    final authState = ref.read(authProvider);
+    final leadRepository = ref.read(leadRepositoryProvider);
+    final phoneDigitsOnly = PhoneNumberValidator.getDigitsOnly(createState.phone);
+    
+    final duplicateLead = await leadRepository.findDuplicateByPhone(
+      phone: phoneDigitsOnly,
+      userId: authState.user?.uid,
+      isAdmin: authState.isAdmin,
+    );
+
+    if (duplicateLead != null && mounted) {
+      // Show duplicate warning dialog
+      final shouldProceed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Duplicate Lead Found'),
+          content: Text(
+            'A lead with this phone number already exists:\n\n'
+            'Name: ${duplicateLead.name}\n'
+            'Phone: ${PhoneNumberFormatter.formatPhoneNumber(duplicateLead.phone, region: duplicateLead.region)}\n'
+            'Status: ${duplicateLead.status.displayName}\n\n'
+            'Do you want to view the existing lead or continue creating a new one?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, false);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => LeadDetailScreen(lead: duplicateLead),
+                  ),
+                );
+              },
+              child: const Text('View Existing'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Create Anyway'),
+            ),
+          ],
+        ),
+      );
+
+      if (shouldProceed != true) {
+        return; // User canceled or chose to view existing lead
+      }
+    }
+
     final createdLead = await ref.read(leadCreateProvider.notifier).createLead();
 
     if (createdLead != null && mounted) {
+      final theme = Theme.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Lead created successfully'),
-          backgroundColor: Colors.green,
+        SnackBar(
+          content: const Text('Lead created successfully'),
+          backgroundColor: theme.colorScheme.primaryContainer,
+          behavior: SnackBarBehavior.floating,
         ),
       );
       Navigator.pop(context, createdLead);
     } else if (mounted) {
       final error = ref.read(leadCreateProvider).error;
       if (error != null) {
+        final theme = Theme.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error: ${error.message}'),
-            backgroundColor: Colors.red,
+            backgroundColor: theme.colorScheme.errorContainer,
+            behavior: SnackBarBehavior.floating,
           ),
         );
       }
@@ -66,6 +127,8 @@ class _LeadCreateScreenState extends ConsumerState<LeadCreateScreen> {
   Widget build(BuildContext context) {
     final createState = ref.watch(leadCreateProvider);
     final authState = ref.watch(authProvider);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     // Check if user is authenticated
     if (!authState.isAuthenticated || authState.user == null) {
@@ -91,13 +154,14 @@ class _LeadCreateScreenState extends ConsumerState<LeadCreateScreen> {
               // Name field
               TextFormField(
                 controller: _nameController,
+                style: TextStyle(color: colorScheme.onSurface),
                 decoration: InputDecoration(
                   labelText: 'Name *',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                   filled: true,
-                  fillColor: Colors.grey[50],
+                  fillColor: colorScheme.surfaceContainerHighest,
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
@@ -113,13 +177,14 @@ class _LeadCreateScreenState extends ConsumerState<LeadCreateScreen> {
               // Phone field
               TextFormField(
                 controller: _phoneController,
+                style: TextStyle(color: colorScheme.onSurface),
                 decoration: InputDecoration(
                   labelText: 'Phone *',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                   filled: true,
-                  fillColor: Colors.grey[50],
+                  fillColor: colorScheme.surfaceContainerHighest,
                   hintText: createState.region == UserRegion.usa 
                       ? '(XXX) XXX-XXXX' 
                       : 'XXXX-XXXXXX',
@@ -141,13 +206,14 @@ class _LeadCreateScreenState extends ConsumerState<LeadCreateScreen> {
               // Location field
               TextFormField(
                 controller: _locationController,
+                style: TextStyle(color: colorScheme.onSurface),
                 decoration: InputDecoration(
                   labelText: 'Location (optional)',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                   filled: true,
-                  fillColor: Colors.grey[50],
+                  fillColor: colorScheme.surfaceContainerHighest,
                 ),
                 onChanged: (value) {
                   ref.read(leadCreateProvider.notifier).setLocation(value.isEmpty ? null : value);
@@ -157,13 +223,14 @@ class _LeadCreateScreenState extends ConsumerState<LeadCreateScreen> {
               // Region dropdown
               DropdownButtonFormField<UserRegion>(
                 value: createState.region,
+                style: TextStyle(color: colorScheme.onSurface),
                 decoration: InputDecoration(
                   labelText: 'Region *',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                   filled: true,
-                  fillColor: Colors.grey[50],
+                  fillColor: colorScheme.surfaceContainerHighest,
                 ),
                 items: UserRegion.values.map((region) {
                   return DropdownMenuItem<UserRegion>(
@@ -189,16 +256,42 @@ class _LeadCreateScreenState extends ConsumerState<LeadCreateScreen> {
                 },
               ),
               const SizedBox(height: 16),
+              // Source dropdown
+              DropdownButtonFormField<LeadSource>(
+                value: createState.source,
+                style: TextStyle(color: colorScheme.onSurface),
+                decoration: InputDecoration(
+                  labelText: 'Source *',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  filled: true,
+                  fillColor: colorScheme.surfaceContainerHighest,
+                ),
+                items: LeadSource.values.map((source) {
+                  return DropdownMenuItem<LeadSource>(
+                    value: source,
+                    child: Text(source.displayName),
+                  );
+                }).toList(),
+                onChanged: (source) {
+                  if (source != null) {
+                    ref.read(leadCreateProvider.notifier).setSource(source);
+                  }
+                },
+              ),
+              const SizedBox(height: 16),
               // Status dropdown
               DropdownButtonFormField<LeadStatus>(
                 value: createState.status,
+                style: TextStyle(color: colorScheme.onSurface),
                 decoration: InputDecoration(
                   labelText: 'Status *',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                   filled: true,
-                  fillColor: Colors.grey[50],
+                  fillColor: colorScheme.surfaceContainerHighest,
                 ),
                 items: LeadStatus.values.map((status) {
                   return DropdownMenuItem<LeadStatus>(
@@ -222,7 +315,7 @@ class _LeadCreateScreenState extends ConsumerState<LeadCreateScreen> {
                   padding: const EdgeInsets.only(bottom: 16.0),
                   child: Text(
                     createState.error!.message,
-                    style: const TextStyle(color: Colors.red),
+                    style: TextStyle(color: colorScheme.error),
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -237,12 +330,12 @@ class _LeadCreateScreenState extends ConsumerState<LeadCreateScreen> {
                     ),
                   ),
                   child: createState.isLoading
-                      ? const SizedBox(
+                      ? SizedBox(
                           height: 20,
                           width: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            valueColor: AlwaysStoppedAnimation<Color>(colorScheme.onPrimary),
                           ),
                         )
                       : const Text(
@@ -264,9 +357,12 @@ class _LeadCreateScreenState extends ConsumerState<LeadCreateScreen> {
   Widget _buildAssignedUserDropdown(LeadCreateState createState) {
     // Use all active users to support cross-region assignment
     final userListState = ref.watch(allActiveUsersProvider);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return DropdownButtonFormField<String?>(
       value: createState.assignedTo,
+      style: TextStyle(color: colorScheme.onSurface),
       decoration: InputDecoration(
         labelText: 'Assigned To (optional)',
         hintText: 'Select user from any region',
@@ -274,7 +370,7 @@ class _LeadCreateScreenState extends ConsumerState<LeadCreateScreen> {
           borderRadius: BorderRadius.circular(12),
         ),
         filled: true,
-        fillColor: Colors.grey[50],
+        fillColor: colorScheme.surfaceContainerHighest,
       ),
       items: [
         const DropdownMenuItem<String?>(

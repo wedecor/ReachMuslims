@@ -39,20 +39,23 @@ class CompactLastContacted extends ConsumerWidget {
       return const SizedBox.shrink();
     }
 
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(
           Icons.access_time,
           size: 12,
-          color: Colors.grey[500],
+          color: colorScheme.onSurfaceVariant,
         ),
         const SizedBox(width: 4),
         Text(
           relativeTime,
           style: TextStyle(
             fontSize: 11,
-            color: Colors.grey[600],
+            color: colorScheme.onSurfaceVariant,
           ),
         ),
       ],

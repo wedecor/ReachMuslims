@@ -5,10 +5,21 @@ import '../providers/dashboard_provider.dart';
 import '../providers/lead_list_provider.dart';
 import '../providers/lead_filter_provider.dart';
 import '../widgets/lead_filter_panel.dart';
-import '../widgets/status_badge.dart';
+import '../widgets/status_dropdown.dart';
 import '../widgets/priority_star_toggle.dart';
 import '../widgets/compact_last_contacted.dart';
 import '../widgets/lead_card_action_buttons.dart';
+import '../widgets/offline_banner.dart';
+import '../widgets/pending_sync_indicator.dart';
+import '../widgets/lead_tile_info/assigned_user_badge.dart';
+import '../widgets/lead_tile_info/lead_source_badge.dart';
+import '../widgets/lead_tile_info/location_display.dart';
+import '../widgets/lead_tile_info/lazy_follow_up_count_badge.dart';
+import '../widgets/lead_tile_info/days_since_creation.dart';
+import '../widgets/lead_tile_info/region_badge.dart';
+import '../widgets/lead_tile_info/lazy_next_scheduled_followup.dart';
+import '../widgets/lead_tile_info/conversion_probability_indicator.dart';
+import '../widgets/lead_tile_info/lazy_last_activity_summary.dart';
 import '../../domain/models/lead.dart';
 import 'lead_create_screen.dart';
 import 'lead_detail_screen.dart';
@@ -101,6 +112,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       ),
       body: Column(
         children: [
+          OfflineBanner(),
+          PendingSyncIndicator(),
           // KPI Metrics Section
           if (stats.isLoading && stats.totalLeads == 0)
             const SizedBox(
@@ -134,10 +147,27 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     : null,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: Theme.of(context).colorScheme.outline.withOpacity(0.5),
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: Theme.of(context).colorScheme.outline.withOpacity(0.5),
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: Theme.of(context).colorScheme.primary,
+                    width: 2,
+                  ),
                 ),
                 filled: true,
-                fillColor: Colors.grey[50],
+                fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
               ),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
               onChanged: (value) {
                 ref.read(leadFilterProvider.notifier).setSearchQuery(value.isEmpty ? null : value);
                 // Debounce search
@@ -166,9 +196,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   Widget _buildKPISection(BuildContext context, DashboardStats stats) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
     return Container(
       padding: const EdgeInsets.all(16.0),
-      color: Colors.grey[50],
+      color: colorScheme.surfaceContainerHighest,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -196,7 +229,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   title: 'New Leads',
                   value: stats.newLeads.toString(),
                   icon: Icons.new_releases_outlined,
-                  color: Colors.blue,
+                  color: Theme.of(context).colorScheme.secondary,
                 ),
                 const SizedBox(width: 12),
                 _buildKPICard(
@@ -204,7 +237,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   title: 'Follow-up',
                   value: stats.followUpLeads.toString(),
                   icon: Icons.history_outlined,
-                  color: Colors.orange,
+                  color: Theme.of(context).colorScheme.tertiary,
                 ),
                 const SizedBox(width: 12),
                 _buildKPICard(
@@ -212,7 +245,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   title: 'Converted',
                   value: stats.convertedLeads.toString(),
                   icon: Icons.check_circle_outline,
-                  color: Colors.green,
+                  color: Theme.of(context).colorScheme.primaryContainer,
                 ),
                 const SizedBox(width: 12),
                 _buildKPICard(
@@ -220,7 +253,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   title: 'Starred',
                   value: stats.priorityLeads.toString(),
                   icon: Icons.star_outline,
-                  color: Colors.amber,
+                  color: Theme.of(context).colorScheme.tertiaryContainer,
                 ),
               ],
             ),
@@ -237,15 +270,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     required IconData icon,
     required Color color,
   }) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
     return Container(
       width: 140,
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: colorScheme.outline.withOpacity(0.2),
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: colorScheme.shadow.withOpacity(0.1),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -259,7 +298,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           const SizedBox(height: 8),
           Text(
             value,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+            style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: color,
                 ),
@@ -267,8 +306,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           const SizedBox(height: 4),
           Text(
             title,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey[600],
+            style: theme.textTheme.bodySmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
                 ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -279,9 +318,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   Widget _buildQuickStatsSection(BuildContext context, DashboardStats stats) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-      color: Colors.blue[50],
+      color: colorScheme.primaryContainer,
       child: Row(
         children: [
           Expanded(
@@ -292,7 +334,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               value: stats.leadsContactedToday.toString(),
             ),
           ),
-          Container(width: 1, height: 30, color: Colors.blue[200]),
+          Container(width: 1, height: 30, color: colorScheme.primary.withOpacity(0.3)),
           Expanded(
             child: _buildQuickStatItem(
               context,
@@ -312,10 +354,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     required String label,
     required String value,
   }) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(icon, size: 20, color: Colors.blue[700]),
+        Icon(icon, size: 20, color: colorScheme.onPrimaryContainer),
         const SizedBox(width: 8),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -326,14 +371,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Colors.blue[900],
+                color: colorScheme.onPrimaryContainer,
               ),
             ),
             Text(
               label,
               style: TextStyle(
                 fontSize: 12,
-                color: Colors.blue[700],
+                color: colorScheme.onPrimaryContainer.withOpacity(0.8),
               ),
             ),
           ],
@@ -414,12 +459,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             Icon(
               Icons.error_outline,
               size: 64,
-              color: Colors.red[300],
+              color: Theme.of(context).colorScheme.error,
             ),
             const SizedBox(height: 16),
             Text(
               'Error: ${state.error!.message}',
-              style: const TextStyle(color: Colors.red),
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
@@ -443,14 +488,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               Icon(
                 Icons.filter_alt_off,
                 size: 64,
-                color: Colors.grey[400],
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
               const SizedBox(height: 16),
               Text(
                 'No leads match your filters',
                 style: TextStyle(
                   fontSize: 16,
-                  color: Colors.grey[600],
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: 8),
@@ -527,10 +572,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           } catch (e) {
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Error opening lead: ${e.toString()}'),
-                  backgroundColor: Colors.red,
-                ),
+                  SnackBar(
+                    content: Text('Error opening lead: ${e.toString()}'),
+                    backgroundColor: Theme.of(context).colorScheme.errorContainer,
+                    behavior: SnackBarBehavior.floating,
+                  ),
               );
             }
           }
@@ -558,19 +604,63 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  StatusBadge(status: lead.status),
+                  StatusDropdown(lead: lead),
                 ],
               ),
               const SizedBox(height: 8),
-              // Middle row: Phone number (subtle, formatted)
-              Text(
-                PhoneNumberFormatter.formatPhoneNumber(lead.phone, region: lead.region),
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Colors.grey[700],
-                ),
+              // Second row: Phone number and region badge
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      PhoneNumberFormatter.formatPhoneNumber(lead.phone, region: lead.region),
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  RegionBadge(lead: lead),
+                ],
               ),
-              // Last contacted indicator
+              const SizedBox(height: 8),
+              // Third row: Badges (Assigned User, Source, Follow-up Count)
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  AssignedUserBadge(lead: lead),
+                  LeadSourceBadge(lead: lead),
+                  LazyFollowUpCountBadge(leadId: lead.id),
+                ],
+              ),
+              const SizedBox(height: 8),
+              // Fourth row: Location and Days Since Creation
+              Row(
+                children: [
+                  Expanded(
+                    child: LocationDisplay(lead: lead),
+                  ),
+                  const SizedBox(width: 8),
+                  DaysSinceCreation(lead: lead),
+                ],
+              ),
+              const SizedBox(height: 8),
+              // Fifth row: Last Activity and Next Scheduled Follow-up
+              Row(
+                children: [
+                  Expanded(
+                    child: LazyLastActivitySummary(lead: lead),
+                  ),
+                  const SizedBox(width: 8),
+                  LazyNextScheduledFollowUp(leadId: lead.id),
+                ],
+              ),
+              const SizedBox(height: 8),
+              // Sixth row: Conversion Probability Indicator
+              ConversionProbabilityIndicator(lead: lead),
+              // Last contacted indicator (compact)
               const SizedBox(height: 8),
               CompactLastContacted(leadId: lead.id),
               // Bottom action section: Large Call and WhatsApp buttons

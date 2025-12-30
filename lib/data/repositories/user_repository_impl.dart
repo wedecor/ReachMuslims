@@ -75,6 +75,8 @@ class UserRepositoryImpl implements UserRepository {
   @override
   Future<List<User>> getAllActiveUsers() async {
     try {
+      // Proper Firestore query with composite index
+      // Index required: active (ASC), status (ASC), name (ASC)
       final snapshot = await _firestore
           .collection(FirebaseConstants.usersCollection)
           .where('active', isEqualTo: true)
@@ -86,6 +88,12 @@ class UserRepositoryImpl implements UserRepository {
           .map((doc) => UserModel.fromFirestore(doc))
           .toList();
     } on FirebaseException catch (e) {
+      if (e.code == 'failed-precondition') {
+        throw FirestoreFailure(
+          'Firestore index is being created. Please wait a few minutes and try again. '
+          'Index: users (active, status, name)',
+        );
+      }
       throw FirestoreFailure('Failed to fetch active users: ${e.message ?? 'Unknown error'}');
     } catch (e) {
       if (e is Failure) rethrow;

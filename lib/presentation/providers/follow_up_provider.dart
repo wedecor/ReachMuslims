@@ -6,6 +6,8 @@ import '../../domain/repositories/lead_repository.dart';
 import '../../data/repositories/follow_up_repository_impl.dart';
 import '../../core/errors/failures.dart';
 import '../providers/auth_provider.dart';
+import '../providers/connectivity_provider.dart';
+import '../providers/offline_sync_provider.dart';
 import 'lead_list_provider.dart';
 
 final followUpRepositoryProvider = Provider<FollowUpRepository>((ref) {
@@ -159,7 +161,19 @@ class AddFollowUpNotifier extends StateNotifier<AddFollowUpState> {
     state = state.copyWith(isLoading: true, clearError: true);
 
     try {
+      // Mark write as pending if offline
+      final connectivityState = _ref.read(connectivityProvider);
+      if (!connectivityState.isOnline) {
+        _ref.read(offlineSyncProvider.notifier).markWritePending();
+      }
+
       await _followUpRepository.addFollowUp(_leadId, note, user.uid);
+      
+      // Mark as synced if online
+      if (connectivityState.isOnline) {
+        _ref.read(offlineSyncProvider.notifier).markWriteSynced();
+      }
+      
       state = state.copyWith(isLoading: false);
       return true;
     } catch (e) {

@@ -6,14 +6,24 @@ import '../providers/lead_list_provider.dart';
 import '../providers/lead_filter_provider.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/status_dropdown.dart';
-import '../widgets/status_badge.dart';
 import '../widgets/lead_filter_panel.dart';
 import '../widgets/priority_star_toggle.dart';
 import '../widgets/compact_last_contacted.dart';
 import '../widgets/lead_card_action_buttons.dart';
+import '../widgets/swipeable_lead_card.dart';
+import '../widgets/offline_banner.dart';
+import '../widgets/pending_sync_indicator.dart';
+import '../widgets/lead_tile_info/assigned_user_badge.dart';
+import '../widgets/lead_tile_info/lead_source_badge.dart';
+import '../widgets/lead_tile_info/location_display.dart';
+import '../widgets/lead_tile_info/lazy_follow_up_count_badge.dart';
+import '../widgets/lead_tile_info/days_since_creation.dart';
+import '../widgets/lead_tile_info/region_badge.dart';
+import '../widgets/lead_tile_info/lazy_next_scheduled_followup.dart';
+import '../widgets/lead_tile_info/conversion_probability_indicator.dart';
+import '../widgets/lead_tile_info/lazy_last_activity_summary.dart';
 import 'lead_create_screen.dart';
 import 'lead_detail_screen.dart';
-import 'package:intl/intl.dart';
 import '../../core/utils/phone_number_formatter.dart';
 
 class LeadListScreen extends ConsumerStatefulWidget {
@@ -26,6 +36,7 @@ class LeadListScreen extends ConsumerStatefulWidget {
 class _LeadListScreenState extends ConsumerState<LeadListScreen>
     with SingleTickerProviderStateMixin {
   final _searchController = TextEditingController();
+  bool _hasSearchText = false;
   final _scrollControllers = [
     ScrollController(),
     ScrollController(),
@@ -40,6 +51,14 @@ class _LeadListScreenState extends ConsumerState<LeadListScreen>
     for (final controller in _scrollControllers) {
       controller.addListener(() => _onScroll(controller));
     }
+    _searchController.addListener(() {
+      final hasText = _searchController.text.isNotEmpty;
+      if (hasText != _hasSearchText) {
+        setState(() {
+          _hasSearchText = hasText;
+        });
+      }
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(leadListProvider.notifier).loadLeads(refresh: true);
     });
@@ -94,40 +113,79 @@ class _LeadListScreenState extends ConsumerState<LeadListScreen>
       ),
       body: Column(
         children: [
+          OfflineBanner(),
+          PendingSyncIndicator(),
           // Search bar
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Search by name or phone',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _searchController.clear();
-                          ref.read(leadFilterProvider.notifier).setSearchQuery(null);
-                          ref.read(leadListProvider.notifier).refresh();
-                        },
-                      )
-                    : null,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+          Builder(
+            builder: (context) {
+              final theme = Theme.of(context);
+              final colorScheme = theme.colorScheme;
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+                child: TextField(
+                  controller: _searchController,
+                  style: TextStyle(color: colorScheme.onSurface),
+                  decoration: InputDecoration(
+                    hintText: 'Search by name or phone',
+                    hintStyle: TextStyle(color: colorScheme.onSurfaceVariant),
+                    prefixIcon: Icon(
+                      Icons.search,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                    suffixIcon: _hasSearchText
+                        ? IconButton(
+                            icon: Icon(
+                              Icons.clear,
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() {
+                                _hasSearchText = false;
+                              });
+                              ref.read(leadFilterProvider.notifier).setSearchQuery(null);
+                              ref.read(leadListProvider.notifier).refresh();
+                            },
+                          )
+                        : null,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: colorScheme.outline.withOpacity(0.5),
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: colorScheme.outline.withOpacity(0.5),
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: colorScheme.primary,
+                        width: 2,
+                      ),
+                    ),
+                    filled: true,
+                    fillColor: colorScheme.surfaceContainerHighest,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                  onChanged: (value) {
+                    setState(() {
+                      _hasSearchText = value.isNotEmpty;
+                    });
+                    ref.read(leadFilterProvider.notifier).setSearchQuery(value.isEmpty ? null : value);
+                    // Debounce search
+                    Future.delayed(const Duration(milliseconds: 500), () {
+                      if (_searchController.text == value) {
+                        ref.read(leadListProvider.notifier).refresh();
+                      }
+                    });
+                  },
                 ),
-                filled: true,
-                fillColor: Colors.grey[50],
-              ),
-              onChanged: (value) {
-                ref.read(leadFilterProvider.notifier).setSearchQuery(value.isEmpty ? null : value);
-                // Debounce search
-                Future.delayed(const Duration(milliseconds: 500), () {
-                  if (_searchController.text == value) {
-                    ref.read(leadListProvider.notifier).refresh();
-                  }
-                });
-              },
-            ),
+              );
+            },
           ),
           // Advanced Filters Panel
           const LeadFilterPanel(),
@@ -179,12 +237,12 @@ class _LeadListScreenState extends ConsumerState<LeadListScreen>
             Icon(
               Icons.error_outline,
               size: 64,
-              color: Colors.red[300],
+              color: Theme.of(context).colorScheme.error,
             ),
             const SizedBox(height: 16),
             Text(
               'Error: ${state.error!.message}',
-              style: const TextStyle(color: Colors.red),
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
@@ -207,14 +265,14 @@ class _LeadListScreenState extends ConsumerState<LeadListScreen>
             Icon(
               Icons.inbox_outlined,
               size: 64,
-              color: Colors.grey[400],
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
             const SizedBox(height: 16),
             Text(
               'No ${status.displayName} leads found',
               style: TextStyle(
                 fontSize: 16,
-                color: Colors.grey[600],
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
           ],
@@ -237,8 +295,12 @@ class _LeadListScreenState extends ConsumerState<LeadListScreen>
 
   Widget _buildLeadItem(Lead lead) {
     try {
-      return Card(
-        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      final isMobile = MediaQuery.of(context).size.width < 600;
+      final card = Card(
+        margin: EdgeInsets.symmetric(
+          horizontal: isMobile ? 4 : 8,
+          vertical: isMobile ? 2 : 4,
+        ),
         elevation: 1,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
@@ -257,7 +319,8 @@ class _LeadListScreenState extends ConsumerState<LeadListScreen>
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('Error opening lead: ${e.toString()}'),
-                    backgroundColor: Colors.red,
+                    backgroundColor: Theme.of(context).colorScheme.errorContainer,
+                    behavior: SnackBarBehavior.floating,
                   ),
                 );
               }
@@ -265,7 +328,9 @@ class _LeadListScreenState extends ConsumerState<LeadListScreen>
           },
           borderRadius: BorderRadius.circular(12),
           child: Padding(
-            padding: const EdgeInsets.all(12.0),
+            padding: EdgeInsets.all(
+              MediaQuery.of(context).size.width < 600 ? 8.0 : 12.0,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -289,16 +354,60 @@ class _LeadListScreenState extends ConsumerState<LeadListScreen>
                     StatusDropdown(lead: lead),
                   ],
                 ),
-              const SizedBox(height: 8),
-              // Middle row: Phone number (subtle, formatted)
-              Text(
-                PhoneNumberFormatter.formatPhoneNumber(lead.phone, region: lead.region),
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Colors.grey[700],
+                const SizedBox(height: 8),
+                // Second row: Phone number and region badge
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        PhoneNumberFormatter.formatPhoneNumber(lead.phone, region: lead.region),
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    RegionBadge(lead: lead),
+                  ],
                 ),
-              ),
-                // Last contacted indicator
+                const SizedBox(height: 8),
+                // Third row: Badges (Assigned User, Source, Follow-up Count)
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    AssignedUserBadge(lead: lead),
+                    LeadSourceBadge(lead: lead),
+                    LazyFollowUpCountBadge(leadId: lead.id),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                // Fourth row: Location and Days Since Creation
+                Row(
+                  children: [
+                    Expanded(
+                      child: LocationDisplay(lead: lead),
+                    ),
+                    const SizedBox(width: 8),
+                    DaysSinceCreation(lead: lead),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                // Fifth row: Last Activity and Next Scheduled Follow-up
+                Row(
+                  children: [
+                  Expanded(
+                    child: LazyLastActivitySummary(lead: lead),
+                  ),
+                  const SizedBox(width: 8),
+                  LazyNextScheduledFollowUp(leadId: lead.id),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                // Sixth row: Conversion Probability Indicator
+                ConversionProbabilityIndicator(lead: lead),
+                // Last contacted indicator (compact)
                 const SizedBox(height: 8),
                 CompactLastContacted(leadId: lead.id),
                 // Bottom action section: Large Call and WhatsApp buttons
@@ -308,6 +417,12 @@ class _LeadListScreenState extends ConsumerState<LeadListScreen>
             ),
           ),
         ),
+      );
+
+      // Wrap in swipeable card for mobile
+      return SwipeableLeadCard(
+        lead: lead,
+        child: card,
       );
     } catch (e) {
       debugPrint('Error building lead item: $e');

@@ -20,6 +20,16 @@ abstract class LeadRepository {
   Future<void> updateLeadStatus(String leadId, LeadStatus status);
   Future<Lead?> getLeadById(String leadId);
   Future<void> assignLead(String leadId, String? assignedTo, String? assignedToName);
+  
+  /// Check if a lead with the given phone number already exists
+  /// Returns the existing lead if found, null otherwise
+  /// Admin: checks all leads
+  /// Sales: checks assigned + unassigned leads (read-only check)
+  Future<Lead?> findDuplicateByPhone({
+    required String phone,
+    required String? userId,
+    required bool isAdmin,
+  });
 
   // Dashboard statistics
   Future<int> getTotalLeadsCount({

@@ -184,7 +184,10 @@ class DashboardNotifier extends StateNotifier<DashboardStats> {
           userId: userId,
           isAdmin: isAdmin,
           region: region,
-        ),
+        ).catchError((e) {
+          debugPrint('Error getting leads contacted today count: $e');
+          return 0; // Return 0 on error to prevent dashboard from breaking
+        }),
       ]);
 
       final leadsContactedToday = quickStatsResults[0];

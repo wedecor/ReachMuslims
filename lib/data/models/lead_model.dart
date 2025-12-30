@@ -17,6 +17,7 @@ class LeadModel extends Lead {
     super.isPriority,
     super.lastContactedAt,
     super.isDeleted,
+    super.source,
   });
 
   factory LeadModel.fromFirestore(DocumentSnapshot doc) {
@@ -35,6 +36,7 @@ class LeadModel extends Lead {
       isPriority: data['isPriority'] as bool? ?? false,
       lastContactedAt: (data['lastContactedAt'] as Timestamp?)?.toDate(),
       isDeleted: data['isDeleted'] as bool? ?? false,
+      source: LeadSource.fromString(data['source'] as String? ?? 'other'),
     );
   }
 
@@ -52,6 +54,7 @@ class LeadModel extends Lead {
       'isPriority': isPriority,
       if (lastContactedAt != null) 'lastContactedAt': Timestamp.fromDate(lastContactedAt!),
       'isDeleted': isDeleted,
+      'source': source.name,
     };
   }
 }

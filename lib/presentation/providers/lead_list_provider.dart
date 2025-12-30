@@ -7,6 +7,8 @@ import '../../data/repositories/lead_repository_impl.dart';
 import '../../data/repositories/follow_up_repository_impl.dart';
 import '../../core/errors/failures.dart';
 import '../providers/auth_provider.dart';
+import '../providers/connectivity_provider.dart';
+import '../providers/offline_sync_provider.dart';
 import 'lead_filter_provider.dart';
 
 final leadRepositoryProvider = Provider<LeadRepository>((ref) {
@@ -273,8 +275,19 @@ class LeadListNotifier extends StateNotifier<LeadListState> {
 
       state = state.copyWith(leads: updatedLeads);
 
-      // Update in Firestore
+      // Mark write as pending if offline
+      final connectivityState = _ref.read(connectivityProvider);
+      if (!connectivityState.isOnline) {
+        _ref.read(offlineSyncProvider.notifier).markWritePending();
+      }
+
+      // Update in Firestore (will queue if offline)
       await _leadRepository.updateLeadStatus(leadId, status);
+
+      // Mark as synced if online
+      if (connectivityState.isOnline) {
+        _ref.read(offlineSyncProvider.notifier).markWriteSynced();
+      }
 
       // Reload to get server timestamp
       await refresh();

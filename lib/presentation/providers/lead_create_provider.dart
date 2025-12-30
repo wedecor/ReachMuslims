@@ -11,6 +11,7 @@ class LeadCreateState {
   final String? location;
   final UserRegion region;
   final LeadStatus status;
+  final LeadSource source;
   final String? assignedTo;
   final String? assignedToName;
   final bool isLoading;
@@ -22,6 +23,7 @@ class LeadCreateState {
     this.location,
     this.region = UserRegion.india,
     this.status = LeadStatus.newLead,
+    this.source = LeadSource.other,
     this.assignedTo,
     this.assignedToName,
     this.isLoading = false,
@@ -34,6 +36,7 @@ class LeadCreateState {
     String? location,
     UserRegion? region,
     LeadStatus? status,
+    LeadSource? source,
     String? assignedTo,
     String? assignedToName,
     bool? isLoading,
@@ -48,6 +51,7 @@ class LeadCreateState {
       location: clearLocation ? null : (location ?? this.location),
       region: region ?? this.region,
       status: status ?? this.status,
+      source: source ?? this.source,
       assignedTo: clearAssignedTo ? null : (assignedTo ?? this.assignedTo),
       assignedToName: clearAssignedTo ? null : (assignedToName ?? this.assignedToName),
       isLoading: isLoading ?? this.isLoading,
@@ -104,6 +108,10 @@ class LeadCreateNotifier extends StateNotifier<LeadCreateState> {
     state = state.copyWith(status: status);
   }
 
+  void setSource(LeadSource source) {
+    state = state.copyWith(source: source);
+  }
+
   void setAssignedTo(String? assignedTo, String? assignedToName) {
     state = state.copyWith(
       assignedTo: assignedTo,
@@ -135,6 +143,7 @@ class LeadCreateNotifier extends StateNotifier<LeadCreateState> {
         location: state.location?.trim().isEmpty == true ? null : state.location?.trim(),
         region: state.region,
         status: state.status,
+        source: state.source,
         assignedTo: state.assignedTo?.isEmpty == true ? null : state.assignedTo,
         assignedToName: state.assignedToName,
         createdAt: now,

@@ -5,6 +5,7 @@ import '../../core/services/lead_actions_service.dart';
 import '../providers/auth_provider.dart';
 import '../providers/lead_list_provider.dart';
 import '../providers/follow_up_provider.dart';
+import '../providers/connectivity_provider.dart';
 
 final leadActionsServiceProvider = Provider<LeadActionsService>((ref) {
   return LeadActionsService(
@@ -177,77 +178,99 @@ class _LeadCardActionButtonsState extends ConsumerState<LeadCardActionButtons> {
   @override
   Widget build(BuildContext context) {
     final service = ref.read(leadActionsServiceProvider);
+    final connectivityState = ref.watch(connectivityProvider);
     final isMobile = service.isMobilePlatform(context);
     final hasPhone = widget.lead.phone.isNotEmpty;
-    final isCallDisabled = !hasPhone || !isMobile || _isCallLoading;
-    final isWhatsAppDisabled = !hasPhone || _isWhatsAppLoading;
+    final isOffline = !connectivityState.isOnline;
+    
+    // Disable Call and WhatsApp when offline
+    final isCallDisabled = !hasPhone || !isMobile || _isCallLoading || isOffline;
+    final isWhatsAppDisabled = !hasPhone || _isWhatsAppLoading || isOffline;
 
     return Row(
       children: [
         // Left button: Call
         Expanded(
-          child: ElevatedButton.icon(
-            onPressed: isCallDisabled ? null : () => _handleCall(context, ref),
-            icon: _isCallLoading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+          child: Tooltip(
+            message: isOffline ? 'Call unavailable offline' : 'Call lead',
+            child: ElevatedButton.icon(
+              onPressed: isCallDisabled ? null : () => _handleCall(context, ref),
+              icon: _isCallLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : Icon(
+                      isOffline ? Icons.phone_disabled : Icons.phone,
+                      size: 20,
                     ),
-                  )
-                : const Icon(Icons.phone, size: 20),
-            label: const Text(
-              'CALL',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 0.5,
+              label: Text(
+                isOffline ? 'OFFLINE' : 'CALL',
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
+                ),
               ),
-            ),
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.primary,
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
+              padding: EdgeInsets.symmetric(
+                vertical: MediaQuery.of(context).size.width < 600 ? 14 : 12,
+              ),
+              minimumSize: const Size(0, 44), // Minimum tap target
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
               elevation: 0,
+            ),
             ),
           ),
         ),
         const SizedBox(width: 8),
         // Right button: WhatsApp (smart: initial or follow-up based on contact history)
         Expanded(
-          child: ElevatedButton.icon(
-            onPressed: isWhatsAppDisabled ? null : () => _handleWhatsApp(context, ref),
-            icon: _isWhatsAppLoading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+          child: Tooltip(
+            message: isOffline ? 'WhatsApp unavailable offline' : 'Open WhatsApp',
+            child: ElevatedButton.icon(
+              onPressed: isWhatsAppDisabled ? null : () => _handleWhatsApp(context, ref),
+              icon: _isWhatsAppLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : Icon(
+                      isOffline ? Icons.chat_bubble_outline : Icons.chat,
+                      size: 20,
                     ),
-                  )
-                : const Icon(Icons.chat, size: 20),
-            label: const Text(
-              'WHATSAPP',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 0.5,
+              label: Text(
+                isOffline ? 'OFFLINE' : 'WHATSAPP',
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
+                ),
               ),
-            ),
             style: ElevatedButton.styleFrom(
               backgroundColor: hasPhone ? const Color(0xFF25D366) : Colors.grey[400],
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
+              padding: EdgeInsets.symmetric(
+                vertical: MediaQuery.of(context).size.width < 600 ? 14 : 12,
+              ),
+              minimumSize: const Size(0, 44), // Minimum tap target
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
               elevation: 0,
+            ),
             ),
           ),
         ),

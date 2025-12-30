@@ -1,5 +1,35 @@
 import 'user.dart';
 
+enum LeadSource {
+  website,
+  referral,
+  socialMedia,
+  whatsapp,
+  other;
+
+  static LeadSource fromString(String value) {
+    return LeadSource.values.firstWhere(
+      (source) => source.name == value.toLowerCase().replaceAll(' ', ''),
+      orElse: () => LeadSource.other,
+    );
+  }
+
+  String get displayName {
+    switch (this) {
+      case LeadSource.website:
+        return 'Website';
+      case LeadSource.referral:
+        return 'Referral';
+      case LeadSource.socialMedia:
+        return 'Social Media';
+      case LeadSource.whatsapp:
+        return 'WhatsApp';
+      case LeadSource.other:
+        return 'Other';
+    }
+  }
+}
+
 enum LeadStatus {
   newLead,
   inTalk,
@@ -41,6 +71,7 @@ class Lead {
   final bool isPriority; // Priority star indicator
   final DateTime? lastContactedAt; // Last contact timestamp
   final bool isDeleted; // Soft delete flag
+  final LeadSource source; // Lead source (read-only after creation)
 
   const Lead({
     required this.id,
@@ -56,6 +87,7 @@ class Lead {
     this.isPriority = false,
     this.lastContactedAt,
     this.isDeleted = false,
+    this.source = LeadSource.other,
   });
 }
 

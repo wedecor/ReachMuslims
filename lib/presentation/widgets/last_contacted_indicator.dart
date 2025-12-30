@@ -17,6 +17,8 @@ class LastContactedIndicator extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final leadListState = ref.watch(leadListProvider);
     
     // Find the lead in the list
@@ -29,19 +31,19 @@ class LastContactedIndicator extends ConsumerWidget {
         'Not contacted yet',
         style: TextStyle(
           fontSize: 12,
-          color: Colors.grey[600],
+          color: colorScheme.onSurfaceVariant,
           fontStyle: FontStyle.italic,
         ),
       );
     }
-
+    
     // Show "Not contacted yet" if lastContactedAt is null
     if (lead.lastContactedAt == null) {
       return Text(
         'Not contacted yet',
         style: TextStyle(
           fontSize: 12,
-          color: Colors.grey[600],
+          color: colorScheme.onSurfaceVariant,
           fontStyle: FontStyle.italic,
         ),
       );
@@ -55,7 +57,7 @@ class LastContactedIndicator extends ConsumerWidget {
         'Not contacted yet',
         style: TextStyle(
           fontSize: 12,
-          color: Colors.grey[600],
+          color: colorScheme.onSurfaceVariant,
           fontStyle: FontStyle.italic,
         ),
       );
@@ -67,14 +69,14 @@ class LastContactedIndicator extends ConsumerWidget {
         Icon(
           Icons.access_time,
           size: 14,
-          color: Colors.grey[600],
+          color: colorScheme.onSurfaceVariant,
         ),
         const SizedBox(width: 4),
         Text(
           'Last contacted: $relativeTime',
           style: TextStyle(
             fontSize: 12,
-            color: Colors.grey[700],
+            color: colorScheme.onSurface,
           ),
         ),
       ],
