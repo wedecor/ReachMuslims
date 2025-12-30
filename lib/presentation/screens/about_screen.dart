@@ -30,7 +30,7 @@ class AboutScreen extends ConsumerWidget {
             const SizedBox(height: 8),
             // Version
             Text(
-              'Version 1.1.0',
+              'Version 1.1.1',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
