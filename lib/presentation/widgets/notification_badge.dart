@@ -121,7 +121,7 @@ class NotificationSheet extends ConsumerWidget {
             const Divider(),
             // Notifications list
             Expanded(
-              child: _buildNotificationsList(notificationState, dateFormat, ref, scrollController),
+              child: _buildNotificationsList(context, notificationState, dateFormat, ref, scrollController),
             ),
           ],
         );
@@ -130,6 +130,7 @@ class NotificationSheet extends ConsumerWidget {
   }
 
   Widget _buildNotificationsList(
+    BuildContext context,
     NotificationListState state,
     DateFormat dateFormat,
     WidgetRef ref,
@@ -157,7 +158,7 @@ class NotificationSheet extends ConsumerWidget {
     }
 
     if (state.notifications.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -177,12 +178,13 @@ class NotificationSheet extends ConsumerWidget {
       itemCount: state.notifications.length,
       itemBuilder: (context, index) {
         final notification = state.notifications[index];
-        return _buildNotificationItem(notification, dateFormat, ref);
+        return _buildNotificationItem(context, notification, dateFormat, ref);
       },
     );
   }
 
   Widget _buildNotificationItem(
+    BuildContext context,
     domain.Notification notification,
     DateFormat dateFormat,
     WidgetRef ref,

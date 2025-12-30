@@ -81,7 +81,7 @@ class NotificationInboxScreen extends ConsumerWidget {
     }
 
     if (state.notifications.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

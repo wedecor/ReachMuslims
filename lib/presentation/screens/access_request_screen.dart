@@ -531,7 +531,7 @@ class _AccessRequestScreenState extends ConsumerState<AccessRequestScreen> {
                             elevation: 0,
                           ),
                           child: ref.watch(authProvider).isLoading
-                              ? const SizedBox(
+                              ? SizedBox(
                                   height: 20,
                                   width: 20,
                                   child: CircularProgressIndicator(
