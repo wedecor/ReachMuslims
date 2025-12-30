@@ -60,11 +60,11 @@ class NotificationInboxScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+            Icon(Icons.error_outline, size: 64, color: Theme.of(context).colorScheme.error),
             const SizedBox(height: 16),
             Text(
               'Error: ${state.error!.message}',
-              style: const TextStyle(color: Colors.red),
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
@@ -85,20 +85,20 @@ class NotificationInboxScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.notifications_none, size: 64, color: Colors.grey),
-            SizedBox(height: 16),
+            Icon(Icons.notifications_none, size: 64, color: Theme.of(context).colorScheme.onSurfaceVariant),
+            const SizedBox(height: 16),
             Text(
               'No notifications',
               style: TextStyle(
                 fontSize: 18,
-                color: Colors.grey,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
                 fontWeight: FontWeight.w500,
               ),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text(
               'You\'ll see notifications here when leads are assigned or updated',
-              style: TextStyle(color: Colors.grey),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
               textAlign: TextAlign.center,
             ),
           ],
@@ -130,15 +130,20 @@ class NotificationInboxScreen extends ConsumerWidget {
   ) {
     final isUnread = !notification.read;
 
+    final colorScheme = Theme.of(context).colorScheme;
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      color: isUnread ? Colors.blue[50] : null,
+      color: isUnread ? colorScheme.primaryContainer.withOpacity(0.3) : null,
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: isUnread ? Colors.blue : Colors.grey[300],
+          backgroundColor: isUnread 
+              ? colorScheme.primary 
+              : colorScheme.surfaceContainerHighest,
           child: Icon(
             _getNotificationIcon(notification.type),
-            color: isUnread ? Colors.white : Colors.grey[600],
+            color: isUnread 
+                ? colorScheme.onPrimary 
+                : colorScheme.onSurfaceVariant,
             size: 20,
           ),
         ),
@@ -146,7 +151,7 @@ class NotificationInboxScreen extends ConsumerWidget {
           notification.title,
           style: TextStyle(
             fontWeight: isUnread ? FontWeight.bold : FontWeight.normal,
-            color: isUnread ? Colors.blue[900] : null,
+            color: isUnread ? colorScheme.primary : null,
           ),
         ),
         subtitle: Column(
@@ -156,7 +161,9 @@ class NotificationInboxScreen extends ConsumerWidget {
             Text(
               notification.body,
               style: TextStyle(
-                color: isUnread ? Colors.blue[800] : Colors.grey[700],
+                color: isUnread 
+                    ? colorScheme.onPrimaryContainer 
+                    : colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: 4),
@@ -164,13 +171,13 @@ class NotificationInboxScreen extends ConsumerWidget {
               dateFormat.format(notification.createdAt),
               style: TextStyle(
                 fontSize: 12,
-                color: Colors.grey[600],
+                color: colorScheme.onSurfaceVariant,
               ),
             ),
           ],
         ),
         trailing: isUnread
-            ? const Icon(Icons.circle, size: 8, color: Colors.blue)
+            ? Icon(Icons.circle, size: 8, color: colorScheme.primary)
             : null,
         onTap: () async {
           // Mark as read if unread
@@ -215,10 +222,11 @@ class NotificationInboxScreen extends ConsumerWidget {
       );
     } else if (context.mounted) {
       // Show error if lead not found
+      final colorScheme = Theme.of(context).colorScheme;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Lead not found'),
-          backgroundColor: Colors.red,
+        SnackBar(
+          content: const Text('Lead not found'),
+          backgroundColor: colorScheme.error,
         ),
       );
     }

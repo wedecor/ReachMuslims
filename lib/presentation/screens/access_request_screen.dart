@@ -53,12 +53,13 @@ class _AccessRequestScreenState extends ConsumerState<AccessRequestScreen> {
       }
     } catch (e) {
       if (mounted) {
+        final colorScheme = Theme.of(context).colorScheme;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
               e is Failure ? e.message : 'Failed to submit access request. Please try again.',
             ),
-            backgroundColor: Colors.red,
+            backgroundColor: colorScheme.error,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
@@ -76,7 +77,7 @@ class _AccessRequestScreenState extends ConsumerState<AccessRequestScreen> {
 
     if (_isSubmitted) {
       return Scaffold(
-        backgroundColor: Colors.grey[100],
+        backgroundColor: colorScheme.background,
         body: SafeArea(
           child: Center(
             child: ConstrainedBox(
@@ -95,7 +96,7 @@ class _AccessRequestScreenState extends ConsumerState<AccessRequestScreen> {
                       Icon(
                         Icons.check_circle_outline,
                         size: 64,
-                        color: Colors.green,
+                        color: colorScheme.primaryContainer,
                       ),
                       const SizedBox(height: 24),
                       Text(
@@ -145,7 +146,7 @@ class _AccessRequestScreenState extends ConsumerState<AccessRequestScreen> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: colorScheme.background,
       appBar: AppBar(
         title: const Text('Request Access'),
         elevation: 0,
@@ -536,7 +537,7 @@ class _AccessRequestScreenState extends ConsumerState<AccessRequestScreen> {
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
                                     valueColor:
-                                        AlwaysStoppedAnimation<Color>(Colors.white),
+                                        AlwaysStoppedAnimation<Color>(colorScheme.onPrimary),
                                   ),
                                 )
                               : const Text(

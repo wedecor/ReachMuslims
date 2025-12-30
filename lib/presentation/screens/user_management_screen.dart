@@ -53,12 +53,12 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                       Icon(
                         Icons.error_outline,
                         size: 64,
-                        color: Colors.red[300],
+                        color: Theme.of(context).colorScheme.error,
                       ),
                       const SizedBox(height: 16),
                       Text(
                         'Error: ${userManagementState.error!.message}',
-                        style: const TextStyle(color: Colors.red),
+                        style: TextStyle(color: Theme.of(context).colorScheme.error),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 16),
@@ -79,14 +79,14 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                           Icon(
                             Icons.people_outline,
                             size: 64,
-                            color: Colors.grey[400],
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
                           const SizedBox(height: 16),
                           Text(
                             'No users found',
                             style: TextStyle(
                               fontSize: 18,
-                              color: Colors.grey[600],
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -138,13 +138,13 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                               decoration: BoxDecoration(
-                                color: Colors.blue[100],
+                                color: Theme.of(context).colorScheme.primaryContainer,
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
                                 'YOU',
                                 style: TextStyle(
-                                  color: Colors.blue[800],
+                                  color: Theme.of(context).colorScheme.onPrimaryContainer,
                                   fontSize: 10,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -158,7 +158,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                         user.email,
                         style: TextStyle(
                           fontSize: 14,
-                          color: Colors.grey[600],
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],
@@ -167,13 +167,17 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: user.active ? Colors.green[100] : Colors.red[100],
+                    color: user.active 
+                        ? Theme.of(context).colorScheme.primaryContainer 
+                        : Theme.of(context).colorScheme.errorContainer,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
                     user.active ? 'ACTIVE' : 'INACTIVE',
                     style: TextStyle(
-                      color: user.active ? Colors.green[800] : Colors.red[800],
+                      color: user.active 
+                          ? Theme.of(context).colorScheme.onPrimaryContainer 
+                          : Theme.of(context).colorScheme.onErrorContainer,
                       fontWeight: FontWeight.bold,
                       fontSize: 12,
                     ),
@@ -233,24 +237,24 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                         ),
                       ),
                       if (user.active)
-                        const PopupMenuItem(
+                        PopupMenuItem(
                           value: 'deactivate',
                           child: Row(
                             children: [
-                              Icon(Icons.block, size: 20, color: Colors.red),
-                              SizedBox(width: 8),
-                              Text('Deactivate', style: TextStyle(color: Colors.red)),
+                              Icon(Icons.block, size: 20, color: Theme.of(context).colorScheme.error),
+                              const SizedBox(width: 8),
+                              Text('Deactivate', style: TextStyle(color: Theme.of(context).colorScheme.error)),
                             ],
                           ),
                         ),
                       if (!user.active)
-                        const PopupMenuItem(
+                        PopupMenuItem(
                           value: 'activate',
                           child: Row(
                             children: [
-                              Icon(Icons.check_circle, size: 20, color: Colors.green),
-                              SizedBox(width: 8),
-                              Text('Activate', style: TextStyle(color: Colors.green)),
+                              Icon(Icons.check_circle, size: 20, color: Theme.of(context).colorScheme.primaryContainer),
+                              const SizedBox(width: 8),
+                              Text('Activate', style: TextStyle(color: Theme.of(context).colorScheme.primaryContainer)),
                             ],
                           ),
                         ),
@@ -261,7 +265,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                     'Cannot modify your own account',
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.grey[600],
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                       fontStyle: FontStyle.italic,
                     ),
                   ),
@@ -277,14 +281,14 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.grey[100],
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
         '$label: $value',
         style: TextStyle(
           fontSize: 12,
-          color: Colors.grey[700],
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
           fontWeight: FontWeight.w500,
         ),
       ),
@@ -401,7 +405,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
             style: FilledButton.styleFrom(
-              backgroundColor: Colors.red,
+              backgroundColor: Theme.of(context).colorScheme.error,
             ),
             child: const Text('Deactivate'),
           ),
@@ -417,10 +421,11 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
   Future<void> _updateUserRole(User user, UserRole role) async {
     final success = await ref.read(userManagementProvider.notifier).updateUserRole(user.uid, role);
     if (mounted) {
+      final colorScheme = Theme.of(context).colorScheme;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(success ? 'Role updated successfully' : 'Failed to update role'),
-          backgroundColor: success ? Colors.green : Colors.red,
+          backgroundColor: success ? colorScheme.primaryContainer : colorScheme.error,
         ),
       );
     }
@@ -429,10 +434,11 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
   Future<void> _updateUserRegion(User user, UserRegion region) async {
     final success = await ref.read(userManagementProvider.notifier).updateUserRegion(user.uid, region);
     if (mounted) {
+      final colorScheme = Theme.of(context).colorScheme;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(success ? 'Region updated successfully' : 'Failed to update region'),
-          backgroundColor: success ? Colors.green : Colors.red,
+          backgroundColor: success ? colorScheme.primaryContainer : colorScheme.error,
         ),
       );
     }
@@ -441,10 +447,11 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
   Future<void> _deactivateUser(User user) async {
     final success = await ref.read(userManagementProvider.notifier).deactivateUser(user.uid);
     if (mounted) {
+      final colorScheme = Theme.of(context).colorScheme;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(success ? 'User deactivated' : 'Failed to deactivate user'),
-          backgroundColor: success ? Colors.orange : Colors.red,
+          backgroundColor: success ? colorScheme.tertiaryContainer : colorScheme.error,
         ),
       );
     }
@@ -453,10 +460,11 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
   Future<void> _activateUser(User user) async {
     final success = await ref.read(userManagementProvider.notifier).activateUser(user.uid);
     if (mounted) {
+      final colorScheme = Theme.of(context).colorScheme;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(success ? 'User activated' : 'Failed to activate user'),
-          backgroundColor: success ? Colors.green : Colors.red,
+          backgroundColor: success ? colorScheme.primaryContainer : colorScheme.error,
         ),
       );
     }

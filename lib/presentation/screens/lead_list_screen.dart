@@ -198,7 +198,7 @@ class _LeadListScreenState extends ConsumerState<LeadListScreen>
               Tab(text: 'Converted'),
             ],
             labelColor: Theme.of(context).colorScheme.primary,
-            unselectedLabelColor: Colors.grey,
+            unselectedLabelColor: Theme.of(context).colorScheme.onSurfaceVariant,
             indicatorColor: Theme.of(context).colorScheme.primary,
           ),
           // Tabbed Lead Lists

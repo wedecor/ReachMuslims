@@ -862,7 +862,7 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
             padding: const EdgeInsets.only(top: 8.0),
             child: Text(
               assignmentState.error!.message,
-              style: const TextStyle(color: Colors.red, fontSize: 12),
+              style: TextStyle(color: Theme.of(context).colorScheme.error, fontSize: 12),
             ),
           ),
       ],

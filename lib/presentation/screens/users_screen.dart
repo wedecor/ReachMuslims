@@ -43,14 +43,14 @@ class UsersScreen extends ConsumerWidget {
                   Icon(
                     Icons.people_outline,
                     size: 64,
-                    color: Colors.grey[400],
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'No team members found',
                     style: TextStyle(
                       fontSize: 18,
-                      color: Colors.grey[600],
+                      color: theme.colorScheme.onSurfaceVariant,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -81,12 +81,12 @@ class UsersScreen extends ConsumerWidget {
               Icon(
                 Icons.error_outline,
                 size: 64,
-                color: Colors.red[300],
+                color: theme.colorScheme.error,
               ),
               const SizedBox(height: 16),
               Text(
                 'Error: ${error is Failure ? error.message : error.toString()}',
-                style: const TextStyle(color: Colors.red),
+                style: TextStyle(color: theme.colorScheme.error),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
@@ -140,7 +140,7 @@ class UsersScreen extends ConsumerWidget {
                     user.email,
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.grey[600],
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
                   if (user.phone != null && user.phone!.isNotEmpty) ...[
@@ -149,7 +149,7 @@ class UsersScreen extends ConsumerWidget {
                       user.phone!,
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.grey[500],
+                        color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
                       ),
                     ),
                   ],
@@ -165,16 +165,16 @@ class UsersScreen extends ConsumerWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: user.role == UserRole.admin
-                          ? Colors.blue[100]
-                          : Colors.green[100],
+                          ? theme.colorScheme.primaryContainer
+                          : theme.colorScheme.secondaryContainer,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       user.role!.name.toUpperCase(),
                       style: TextStyle(
                         color: user.role == UserRole.admin
-                            ? Colors.blue[800]
-                            : Colors.green[800],
+                            ? theme.colorScheme.onPrimaryContainer
+                            : theme.colorScheme.onSecondaryContainer,
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
                       ),
@@ -185,13 +185,13 @@ class UsersScreen extends ConsumerWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.grey[200],
+                      color: theme.colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       user.region!.name.toUpperCase(),
                       style: TextStyle(
-                        color: Colors.grey[700],
+                        color: theme.colorScheme.onSurfaceVariant,
                         fontSize: 11,
                         fontWeight: FontWeight.w500,
                       ),
