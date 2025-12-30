@@ -598,47 +598,45 @@ class LeadRepositoryImpl implements LeadRepository {
     required bool isAdmin,
     UserRegion? region,
   }) async {
+    final now = DateTime.now();
+    final todayStart = DateTime(now.year, now.month, now.day);
+    final todayEnd = todayStart.add(const Duration(days: 1));
+
+    Query query = _firestore.collection(FirebaseConstants.leadsCollection);
+
+    // Apply role-based filtering
+    if (!isAdmin && userId != null) {
+      query = query.where('assignedTo', isEqualTo: userId);
+    } else if (isAdmin && region != null) {
+      query = query.where('region', isEqualTo: region.name);
+    }
+
+    // Filter by lastContactedAt date range (today)
+    query = query
+        .where('lastContactedAt', isGreaterThanOrEqualTo: Timestamp.fromDate(todayStart))
+        .where('lastContactedAt', isLessThan: Timestamp.fromDate(todayEnd))
+        .orderBy('lastContactedAt', descending: true);
+
+    // Fetch and filter deleted leads in memory
     try {
-      final now = DateTime.now();
-      final todayStart = DateTime(now.year, now.month, now.day);
-      final todayEnd = todayStart.add(const Duration(days: 1));
-
-      Query query = _firestore.collection(FirebaseConstants.leadsCollection);
-
-      // Apply role-based filtering
-      if (!isAdmin && userId != null) {
-        query = query.where('assignedTo', isEqualTo: userId);
-      } else if (isAdmin && region != null) {
-        query = query.where('region', isEqualTo: region.name);
+      final snapshot = await query.limit(1000).get();
+      final leads = snapshot.docs.map((doc) => LeadModel.fromFirestore(doc)).toList();
+      return leads.where((lead) => !lead.isDeleted).length;
+    } on FirebaseException catch (e) {
+      // Check if it's a missing index error
+      if (e.code == 'failed-precondition') {
+        debugPrint('Firestore index missing for leads contacted today query. '
+            'This is a non-critical error - returning 0. '
+            'Index needed: leads (assignedTo/region, lastContactedAt)');
+        return 0; // Return 0 instead of throwing to prevent dashboard from breaking
       }
-
-      // Filter by lastContactedAt date range (today)
-      query = query
-          .where('lastContactedAt', isGreaterThanOrEqualTo: Timestamp.fromDate(todayStart))
-          .where('lastContactedAt', isLessThan: Timestamp.fromDate(todayEnd))
-          .orderBy('lastContactedAt', descending: true);
-
-      // Fetch and filter deleted leads in memory
-      try {
-        final snapshot = await query.limit(1000).get();
-        final leads = snapshot.docs.map((doc) => LeadModel.fromFirestore(doc)).toList();
-        return leads.where((lead) => !lead.isDeleted).length;
-      } on FirebaseException catch (e) {
-        // Check if it's a missing index error
-        if (e.code == 'failed-precondition') {
-          debugPrint('Firestore index missing for leads contacted today query. '
-              'This is a non-critical error - returning 0. '
-              'Index needed: leads (assignedTo/region, lastContactedAt)');
-          return 0; // Return 0 instead of throwing to prevent dashboard from breaking
-        }
-        // For other errors, also return 0 to prevent dashboard breakage
-        debugPrint('Error querying leads contacted today: ${e.message}');
-        return 0;
-      } catch (e) {
-        // Catch all other errors and return 0
-        debugPrint('Unexpected error in getLeadsContactedTodayCount: $e');
-        return 0;
-      }
+      // For other errors, also return 0 to prevent dashboard breakage
+      debugPrint('Error querying leads contacted today: ${e.message}');
+      return 0;
+    } catch (e) {
+      // Catch all other errors and return 0
+      debugPrint('Unexpected error in getLeadsContactedTodayCount: $e');
+      return 0;
     }
   }
 
