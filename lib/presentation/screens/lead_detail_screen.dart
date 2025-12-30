@@ -542,6 +542,7 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
       return const SizedBox.shrink();
     }
 
+    final colorScheme = Theme.of(context).colorScheme;
     final scheduledState = ref.watch(scheduledFollowUpListProvider(leadId));
     final pendingFollowUps = scheduledState.scheduledFollowUps
         .where((sf) => sf.status == ScheduledFollowUpStatus.pending)
@@ -556,22 +557,22 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
       margin: const EdgeInsets.all(8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.blue[50],
+        color: colorScheme.primaryContainer.withOpacity(0.3),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.blue[200]!),
+        border: Border.all(color: colorScheme.primary.withOpacity(0.5)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.schedule, size: 20, color: Colors.blue),
+              Icon(Icons.schedule, size: 20, color: colorScheme.primary),
               const SizedBox(width: 8),
               Text(
                 'Scheduled Follow-ups',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: Colors.blue[900],
+                  color: colorScheme.primary,
                 ),
               ),
             ],
@@ -587,6 +588,7 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
   }
 
   Widget _buildScheduledFollowUpItem(ScheduledFollowUp scheduledFollowUp, String leadId) {
+    final colorScheme = Theme.of(context).colorScheme;
     final now = DateTime.now();
     final isOverdue = scheduledFollowUp.scheduledAt.isBefore(now);
     final dateFormat = DateFormat('MMM dd, yyyy hh:mm a');
@@ -596,13 +598,13 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
       child: ListTile(
         leading: Icon(
           isOverdue ? Icons.warning : Icons.schedule,
-          color: isOverdue ? Colors.orange : Colors.blue,
+          color: isOverdue ? colorScheme.error : colorScheme.primary,
         ),
         title: Text(
           dateFormat.format(scheduledFollowUp.scheduledAt),
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: isOverdue ? Colors.orange[900] : null,
+            color: isOverdue ? colorScheme.onErrorContainer : null,
           ),
         ),
         subtitle: scheduledFollowUp.note != null && scheduledFollowUp.note!.isNotEmpty
@@ -722,7 +724,7 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
                     enabled: false,
                     child: Text(
                       currentLead.assignedToName ?? 'Loading...',
-                      style: const TextStyle(color: Colors.grey),
+                      style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
                     ),
                   ),
                 );
@@ -750,7 +752,7 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
                     DropdownMenuItem<String>(
                       value: currentAssignedUserId,
                       enabled: false,
-                      child: const Text('Loading user...', style: TextStyle(color: Colors.grey)),
+                      child: Text('Loading user...', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
                     ),
                   );
                 } else if (assignedUserSnapshot.hasData && assignedUserSnapshot.data != null) {
@@ -763,7 +765,9 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
                       child: Text(
                         assignedUser.name,
                         style: TextStyle(
-                          color: assignedUser.active ? Colors.grey : Colors.red[300],
+                          color: assignedUser.active 
+                              ? Theme.of(context).colorScheme.onSurfaceVariant 
+                              : Theme.of(context).colorScheme.error,
                         ),
                       ),
                     ),
@@ -776,7 +780,7 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
                       enabled: false,
                       child: Text(
                         currentLead.assignedToName ?? 'Unknown User',
-                        style: const TextStyle(color: Colors.grey),
+                        style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
                       ),
                     ),
                   );

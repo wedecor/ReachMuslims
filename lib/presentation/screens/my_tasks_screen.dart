@@ -51,6 +51,8 @@ class MyTasksScreen extends ConsumerWidget {
     UserTasksState tasksState,
     String userId,
   ) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
     if (tasksState.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -60,11 +62,11 @@ class MyTasksScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+            Icon(Icons.error_outline, size: 64, color: colorScheme.error),
             const SizedBox(height: 16),
             Text(
               'Error: ${tasksState.error!.message}',
-              style: TextStyle(color: Colors.red[700]),
+              style: TextStyle(color: colorScheme.error),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
@@ -84,20 +86,20 @@ class MyTasksScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.check_circle_outline, size: 64, color: Colors.grey[400]),
+            Icon(Icons.check_circle_outline, size: 64, color: colorScheme.onSurfaceVariant),
             const SizedBox(height: 16),
             Text(
               'No pending follow-ups',
               style: TextStyle(
                 fontSize: 18,
-                color: Colors.grey[600],
+                color: colorScheme.onSurfaceVariant,
                 fontWeight: FontWeight.w500,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               'All your scheduled follow-ups are completed',
-              style: TextStyle(color: Colors.grey[500]),
+              style: TextStyle(color: colorScheme.onSurfaceVariant.withOpacity(0.7)),
               textAlign: TextAlign.center,
             ),
           ],
@@ -133,19 +135,19 @@ class MyTasksScreen extends ConsumerWidget {
         padding: const EdgeInsets.all(16),
         children: [
           if (overdueTasks.isNotEmpty) ...[
-            _buildSectionHeader('Overdue', Colors.orange),
+            _buildSectionHeader(context, 'Overdue', Theme.of(context).colorScheme.error),
             const SizedBox(height: 8),
             ...overdueTasks.map((task) => _buildTaskItem(context, ref, task)),
             const SizedBox(height: 24),
           ],
           if (todayTasks.isNotEmpty) ...[
-            _buildSectionHeader('Today', Colors.blue),
+            _buildSectionHeader(context, 'Today', Theme.of(context).colorScheme.primary),
             const SizedBox(height: 8),
             ...todayTasks.map((task) => _buildTaskItem(context, ref, task)),
             const SizedBox(height: 24),
           ],
           if (upcomingTasks.isNotEmpty) ...[
-            _buildSectionHeader('Upcoming', Colors.grey),
+            _buildSectionHeader(context, 'Upcoming', Theme.of(context).colorScheme.onSurfaceVariant),
             const SizedBox(height: 8),
             ...upcomingTasks.map((task) => _buildTaskItem(context, ref, task)),
           ],
@@ -154,15 +156,7 @@ class MyTasksScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildSectionHeader(String title, Color color) {
-    // Get a darker shade of the color
-    final darkerColor = Color.fromRGBO(
-      (color.red * 0.7).round().clamp(0, 255),
-      (color.green * 0.7).round().clamp(0, 255),
-      (color.blue * 0.7).round().clamp(0, 255),
-      1.0,
-    );
-    
+  Widget _buildSectionHeader(BuildContext context, String title, Color color) {
     return Row(
       children: [
         Container(
@@ -176,7 +170,7 @@ class MyTasksScreen extends ConsumerWidget {
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: darkerColor,
+            color: color,
           ),
         ),
       ],
@@ -184,6 +178,7 @@ class MyTasksScreen extends ConsumerWidget {
   }
 
   Widget _buildTaskItem(BuildContext context, WidgetRef ref, ScheduledFollowUp task) {
+    final colorScheme = Theme.of(context).colorScheme;
     final dateFormat = DateFormat('MMM dd, yyyy hh:mm a');
     final now = DateTime.now();
     final isOverdue = task.scheduledAt.isBefore(now);
@@ -191,17 +186,17 @@ class MyTasksScreen extends ConsumerWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       elevation: isOverdue ? 4 : 1,
-      color: isOverdue ? Colors.orange[50] : null,
+      color: isOverdue ? colorScheme.errorContainer : null,
       child: ListTile(
         leading: Icon(
           isOverdue ? Icons.warning : Icons.schedule,
-          color: isOverdue ? Colors.orange : Colors.blue,
+          color: isOverdue ? colorScheme.error : colorScheme.primary,
         ),
         title: Text(
           dateFormat.format(task.scheduledAt),
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: isOverdue ? Colors.orange[900] : null,
+            color: isOverdue ? colorScheme.onErrorContainer : null,
           ),
         ),
         subtitle: Column(
@@ -224,7 +219,7 @@ class MyTasksScreen extends ConsumerWidget {
                     child: Text(
                       'Lead: ${snapshot.data!.name}',
                       style: TextStyle(
-                        color: Colors.blue[700],
+                        color: colorScheme.primary,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -240,7 +235,7 @@ class MyTasksScreen extends ConsumerWidget {
           children: [
             IconButton(
               icon: const Icon(Icons.visibility, size: 20),
-              color: Colors.blue,
+              color: colorScheme.primary,
               onPressed: () async {
                 final lead = await _getLeadForTask(ref, task.leadId);
                 if (lead != null && context.mounted) {
@@ -256,7 +251,7 @@ class MyTasksScreen extends ConsumerWidget {
             ),
             IconButton(
               icon: const Icon(Icons.check, size: 20),
-              color: Colors.green,
+              color: colorScheme.primaryContainer,
               onPressed: () async {
                 final userId = ref.read(authProvider).user?.uid;
                 if (userId == null) return;
@@ -266,9 +261,9 @@ class MyTasksScreen extends ConsumerWidget {
                   await repository.markAsCompleted(task.id);
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Marked as completed'),
-                        backgroundColor: Colors.green,
+                      SnackBar(
+                        content: const Text('Marked as completed'),
+                        backgroundColor: colorScheme.primaryContainer,
                       ),
                     );
                     await ref.read(userTasksProvider(userId).notifier).refresh();
@@ -278,7 +273,7 @@ class MyTasksScreen extends ConsumerWidget {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text('Error: ${e.toString()}'),
-                        backgroundColor: Colors.red,
+                        backgroundColor: colorScheme.error,
                       ),
                     );
                   }

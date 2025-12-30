@@ -50,7 +50,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
             Text(
               'Advanced analytics and exports will be available here',
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[600],
+                color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: 24),
@@ -80,7 +80,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                       Text(
                         isAdmin ? 'Total leads in your region' : 'Your assigned leads',
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: Colors.grey[600],
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],
@@ -134,7 +134,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
           padding: const EdgeInsets.all(16),
           child: Text(
             'Error loading metrics: ${stats.error!.message}',
-            style: const TextStyle(color: Colors.red),
+            style: TextStyle(color: theme.colorScheme.error),
           ),
         ),
       );
@@ -170,28 +170,28 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
               title: 'New Leads',
               value: stats.newLeads.toString(),
               icon: Icons.new_releases_outlined,
-              color: Colors.blue,
+              color: theme.colorScheme.primary,
             ),
             _buildMetricCard(
               context,
               title: 'Follow-up Leads',
               value: stats.followUpLeads.toString(),
               icon: Icons.history_outlined,
-              color: Colors.orange,
+              color: theme.colorScheme.tertiary,
             ),
             _buildMetricCard(
               context,
               title: 'Converted',
               value: stats.convertedLeads.toString(),
               icon: Icons.check_circle_outline,
-              color: Colors.green,
+              color: theme.colorScheme.primaryContainer,
             ),
             _buildMetricCard(
               context,
               title: 'Starred',
               value: stats.priorityLeads.toString(),
               icon: Icons.star_outline,
-              color: Colors.amber,
+              color: theme.colorScheme.secondary,
             ),
           ],
         ),
@@ -223,7 +223,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                   child: Text(
                     title,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey[600],
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -262,13 +262,13 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.grey[200],
+                  color: theme.colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
                   icon,
                   size: 32,
-                  color: Colors.grey[600],
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(width: 16),
@@ -286,7 +286,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                     Text(
                       description,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[600],
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -296,13 +296,13 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.orange[100],
+                        color: theme.colorScheme.tertiaryContainer,
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
                         'Coming soon',
                         style: TextStyle(
-                          color: Colors.orange[800],
+                          color: theme.colorScheme.onTertiaryContainer,
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
                         ),
@@ -358,7 +358,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                       Text(
                         'Download all leads as a CSV file for reporting',
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: Colors.grey[600],
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],
@@ -372,7 +372,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                 padding: const EdgeInsets.only(bottom: 12.0),
                 child: Text(
                   exportState.error!.message,
-                  style: const TextStyle(color: Colors.red, fontSize: 12),
+                  style: TextStyle(color: theme.colorScheme.error, fontSize: 12),
                 ),
               ),
             if (exportState.successMessage != null)
@@ -380,7 +380,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                 padding: const EdgeInsets.only(bottom: 12.0),
                 child: Text(
                   exportState.successMessage!,
-                  style: const TextStyle(color: Colors.green, fontSize: 12),
+                  style: TextStyle(color: theme.colorScheme.primaryContainer, fontSize: 12),
                 ),
               ),
             SizedBox(
@@ -395,12 +395,12 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                             .exportLeadsToCsv();
                       },
                 icon: exportState.isLoading
-                    ? const SizedBox(
+                    ? SizedBox(
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.onPrimary),
                         ),
                       )
                     : const Icon(Icons.download),

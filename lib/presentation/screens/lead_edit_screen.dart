@@ -87,11 +87,12 @@ class _LeadEditScreenState extends ConsumerState<LeadEditScreen> {
               : _locationController.text.trim(),
         );
 
+    final colorScheme = Theme.of(context).colorScheme;
     if (success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Lead updated successfully'),
-          backgroundColor: Colors.green,
+        SnackBar(
+          content: const Text('Lead updated successfully'),
+          backgroundColor: colorScheme.primaryContainer,
         ),
       );
       Navigator.pop(context, true);
@@ -101,7 +102,7 @@ class _LeadEditScreenState extends ConsumerState<LeadEditScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error: ${error.message}'),
-            backgroundColor: Colors.red,
+            backgroundColor: colorScheme.error,
           ),
         );
       }
@@ -126,6 +127,7 @@ class _LeadEditScreenState extends ConsumerState<LeadEditScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final editState = ref.watch(leadEditProvider(widget.lead.id));
     final canEdit = _canEdit();
 
@@ -170,7 +172,7 @@ class _LeadEditScreenState extends ConsumerState<LeadEditScreen> {
             children: [
               // Read-only fields info
               Card(
-                color: Colors.grey[100],
+                color: colorScheme.surfaceContainerHighest,
                 child: Padding(
                   padding: const EdgeInsets.all(12.0),
                   child: Column(
@@ -179,14 +181,14 @@ class _LeadEditScreenState extends ConsumerState<LeadEditScreen> {
                       Text(
                         'Note: Only name, phone, and location can be edited.',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.grey[700],
+                              color: colorScheme.onSurfaceVariant,
                             ),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         'Region, Status, and Assignment cannot be changed here.',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.grey[700],
+                              color: colorScheme.onSurfaceVariant,
                             ),
                       ),
                     ],
@@ -203,7 +205,7 @@ class _LeadEditScreenState extends ConsumerState<LeadEditScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   filled: true,
-                  fillColor: Colors.grey[50],
+                  fillColor: colorScheme.surfaceContainerHighest,
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
@@ -222,7 +224,7 @@ class _LeadEditScreenState extends ConsumerState<LeadEditScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   filled: true,
-                  fillColor: Colors.grey[50],
+                  fillColor: colorScheme.surfaceContainerHighest,
                   hintText: widget.lead.region == UserRegion.usa 
                       ? '(XXX) XXX-XXXX' 
                       : 'XXXX-XXXXXX',
@@ -245,7 +247,7 @@ class _LeadEditScreenState extends ConsumerState<LeadEditScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   filled: true,
-                  fillColor: Colors.grey[50],
+                  fillColor: colorScheme.surfaceContainerHighest,
                 ),
               ),
               const SizedBox(height: 32),
@@ -255,7 +257,7 @@ class _LeadEditScreenState extends ConsumerState<LeadEditScreen> {
                   padding: const EdgeInsets.only(bottom: 16.0),
                   child: Text(
                     editState.error!.message,
-                    style: const TextStyle(color: Colors.red),
+                    style: TextStyle(color: colorScheme.error),
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -270,12 +272,12 @@ class _LeadEditScreenState extends ConsumerState<LeadEditScreen> {
                     ),
                   ),
                   child: editState.isLoading
-                      ? const SizedBox(
+                      ? SizedBox(
                           height: 20,
                           width: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            valueColor: AlwaysStoppedAnimation<Color>(colorScheme.onPrimary),
                           ),
                         )
                       : const Text(

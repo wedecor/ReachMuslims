@@ -43,25 +43,26 @@ class _LeadCardActionButtonsState extends ConsumerState<LeadCardActionButtons> {
       final success = await service.callLead(widget.lead, context);
 
       if (!success && context.mounted) {
+        final colorScheme = Theme.of(context).colorScheme;
         if (widget.lead.phone.isEmpty) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('No phone number available for this lead.'),
-              backgroundColor: Colors.red,
+            SnackBar(
+              content: const Text('No phone number available for this lead.'),
+              backgroundColor: colorScheme.error,
             ),
           );
         } else if (!service.isMobilePlatform(context)) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Call is available on mobile only.'),
-              backgroundColor: Colors.orange,
+            SnackBar(
+              content: const Text('Call is available on mobile only.'),
+              backgroundColor: colorScheme.tertiaryContainer,
             ),
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Unable to open phone dialer.'),
-              backgroundColor: Colors.red,
+            SnackBar(
+              content: const Text('Unable to open phone dialer.'),
+              backgroundColor: colorScheme.error,
             ),
           );
         }
@@ -95,29 +96,31 @@ class _LeadCardActionButtonsState extends ConsumerState<LeadCardActionButtons> {
         final success = await service.whatsappLead(widget.lead, context);
         
         if (!success && context.mounted) {
+          final colorScheme = Theme.of(context).colorScheme;
           if (widget.lead.phone.isEmpty) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('No phone number available for this lead.'),
-                backgroundColor: Colors.red,
+              SnackBar(
+                content: const Text('No phone number available for this lead.'),
+                backgroundColor: colorScheme.error,
               ),
             );
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Unable to open WhatsApp.'),
-                backgroundColor: Colors.red,
+              SnackBar(
+                content: const Text('Unable to open WhatsApp.'),
+                backgroundColor: colorScheme.error,
               ),
             );
           }
         } else if (success && context.mounted) {
           ref.read(leadListProvider.notifier).refresh();
           // Show success feedback for initial WhatsApp
+          final colorScheme = Theme.of(context).colorScheme;
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('WhatsApp opened successfully.'),
-              backgroundColor: Colors.green,
-              duration: Duration(seconds: 2),
+            SnackBar(
+              content: const Text('WhatsApp opened successfully.'),
+              backgroundColor: colorScheme.primaryContainer,
+              duration: const Duration(seconds: 2),
             ),
           );
         }
@@ -128,10 +131,11 @@ class _LeadCardActionButtonsState extends ConsumerState<LeadCardActionButtons> {
 
         if (user == null) {
           if (context.mounted) {
+            final colorScheme = Theme.of(context).colorScheme;
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('User not authenticated.'),
-                backgroundColor: Colors.red,
+              SnackBar(
+                content: const Text('User not authenticated.'),
+                backgroundColor: colorScheme.error,
               ),
             );
           }
@@ -141,27 +145,29 @@ class _LeadCardActionButtonsState extends ConsumerState<LeadCardActionButtons> {
         final success = await service.whatsappFollowUp(widget.lead, context, user);
 
         if (!success && context.mounted) {
+          final colorScheme = Theme.of(context).colorScheme;
           if (widget.lead.phone.isEmpty) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('No phone number available for this lead.'),
-                backgroundColor: Colors.red,
+              SnackBar(
+                content: const Text('No phone number available for this lead.'),
+                backgroundColor: colorScheme.error,
               ),
             );
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('WhatsApp opened, but failed to log follow-up.'),
-                backgroundColor: Colors.orange,
+              SnackBar(
+                content: const Text('WhatsApp opened, but failed to log follow-up.'),
+                backgroundColor: colorScheme.tertiaryContainer,
               ),
             );
           }
         } else if (success && context.mounted) {
           ref.read(leadListProvider.notifier).refresh();
+          final colorScheme = Theme.of(context).colorScheme;
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('WhatsApp follow-up logged successfully.'),
-              backgroundColor: Colors.green,
+            SnackBar(
+              content: const Text('WhatsApp follow-up logged successfully.'),
+              backgroundColor: colorScheme.primaryContainer,
             ),
           );
         }
@@ -196,12 +202,12 @@ class _LeadCardActionButtonsState extends ConsumerState<LeadCardActionButtons> {
             child: ElevatedButton.icon(
               onPressed: isCallDisabled ? null : () => _handleCall(context, ref),
               icon: _isCallLoading
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.onPrimary),
                       ),
                     )
                   : Icon(
@@ -218,7 +224,7 @@ class _LeadCardActionButtonsState extends ConsumerState<LeadCardActionButtons> {
               ),
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.primary,
-              foregroundColor: Colors.white,
+              foregroundColor: Theme.of(context).colorScheme.onPrimary,
               padding: EdgeInsets.symmetric(
                 vertical: MediaQuery.of(context).size.width < 600 ? 14 : 12,
               ),
@@ -239,12 +245,12 @@ class _LeadCardActionButtonsState extends ConsumerState<LeadCardActionButtons> {
             child: ElevatedButton.icon(
               onPressed: isWhatsAppDisabled ? null : () => _handleWhatsApp(context, ref),
               icon: _isWhatsAppLoading
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.onPrimary),
                       ),
                     )
                   : Icon(
@@ -260,8 +266,8 @@ class _LeadCardActionButtonsState extends ConsumerState<LeadCardActionButtons> {
                 ),
               ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: hasPhone ? const Color(0xFF25D366) : Colors.grey[400],
-              foregroundColor: Colors.white,
+              backgroundColor: hasPhone ? const Color(0xFF25D366) : Theme.of(context).colorScheme.onSurfaceVariant,
+              foregroundColor: Theme.of(context).colorScheme.onPrimary,
               padding: EdgeInsets.symmetric(
                 vertical: MediaQuery.of(context).size.width < 600 ? 14 : 12,
               ),

@@ -65,12 +65,12 @@ class _PendingAccessRequestsScreenState extends ConsumerState<PendingAccessReque
                       Icon(
                         Icons.error_outline,
                         size: 64,
-                        color: Colors.red[300],
+                        color: Theme.of(context).colorScheme.error,
                       ),
                       const SizedBox(height: 16),
                       Text(
                         'Error: ${pendingState.error!.message}',
-                        style: const TextStyle(color: Colors.red),
+                        style: TextStyle(color: Theme.of(context).colorScheme.error),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 16),
@@ -91,14 +91,14 @@ class _PendingAccessRequestsScreenState extends ConsumerState<PendingAccessReque
                           Icon(
                             Icons.check_circle_outline,
                             size: 64,
-                            color: Colors.grey[400],
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
                           const SizedBox(height: 16),
                           Text(
                             'No pending requests',
                             style: TextStyle(
                               fontSize: 18,
-                              color: Colors.grey[600],
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -147,7 +147,7 @@ class _PendingAccessRequestsScreenState extends ConsumerState<PendingAccessReque
                         user.email,
                         style: TextStyle(
                           fontSize: 14,
-                          color: Colors.grey[600],
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                       if (user.phone != null && user.phone!.isNotEmpty) ...[
@@ -156,7 +156,7 @@ class _PendingAccessRequestsScreenState extends ConsumerState<PendingAccessReque
                           'Phone: ${user.phone}',
                           style: TextStyle(
                             fontSize: 14,
-                            color: Colors.grey[600],
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -166,7 +166,7 @@ class _PendingAccessRequestsScreenState extends ConsumerState<PendingAccessReque
                           'Requested: ${dateFormat.format(user.createdAt!)}',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey[500],
+                            color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.7),
                           ),
                         ),
                       ],
@@ -176,13 +176,13 @@ class _PendingAccessRequestsScreenState extends ConsumerState<PendingAccessReque
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.orange[100],
+                    color: Theme.of(context).colorScheme.tertiaryContainer,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
                     'PENDING',
                     style: TextStyle(
-                      color: Colors.orange[800],
+                      color: Theme.of(context).colorScheme.onTertiaryContainer,
                       fontWeight: FontWeight.bold,
                       fontSize: 12,
                     ),
@@ -197,7 +197,7 @@ class _PendingAccessRequestsScreenState extends ConsumerState<PendingAccessReque
                 OutlinedButton(
                   onPressed: () => _showRejectDialog(context, user),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.red,
+                    foregroundColor: Theme.of(context).colorScheme.error,
                   ),
                   child: const Text('Reject'),
                 ),
@@ -337,7 +337,7 @@ class _PendingAccessRequestsScreenState extends ConsumerState<PendingAccessReque
               _rejectUser(user, reasonController.text.trim());
             },
             style: FilledButton.styleFrom(
-              backgroundColor: Colors.red,
+              backgroundColor: Theme.of(context).colorScheme.error,
             ),
             child: const Text('Reject'),
           ),
@@ -349,11 +349,12 @@ class _PendingAccessRequestsScreenState extends ConsumerState<PendingAccessReque
   Future<void> _approveUser(User user, UserRole role, UserRegion region) async {
     final authState = ref.read(authProvider);
     if (!authState.isAdmin || authState.user == null) {
+      final colorScheme = Theme.of(context).colorScheme;
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Admin access required'),
-            backgroundColor: Colors.red,
+          SnackBar(
+            content: const Text('Admin access required'),
+            backgroundColor: colorScheme.error,
           ),
         );
       }
@@ -399,21 +400,23 @@ class _PendingAccessRequestsScreenState extends ConsumerState<PendingAccessReque
       await ref.read(pendingUsersProvider.notifier).refresh();
 
       if (mounted) {
+        final colorScheme = Theme.of(context).colorScheme;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('User approved successfully'),
-            backgroundColor: Colors.green,
+          SnackBar(
+            content: const Text('User approved successfully'),
+            backgroundColor: colorScheme.primaryContainer,
           ),
         );
       }
     } catch (e) {
       if (mounted) {
+        final colorScheme = Theme.of(context).colorScheme;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
               e is Failure ? e.message : 'Failed to approve user: ${e.toString()}',
             ),
-            backgroundColor: Colors.red,
+            backgroundColor: colorScheme.error,
           ),
         );
       }
@@ -422,12 +425,13 @@ class _PendingAccessRequestsScreenState extends ConsumerState<PendingAccessReque
 
   Future<void> _rejectUser(User user, String? reason) async {
     final authState = ref.read(authProvider);
+    final colorScheme = Theme.of(context).colorScheme;
     if (!authState.isAdmin || authState.user == null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Admin access required'),
-            backgroundColor: Colors.red,
+          SnackBar(
+            content: const Text('Admin access required'),
+            backgroundColor: colorScheme.error,
           ),
         );
       }
@@ -460,9 +464,9 @@ class _PendingAccessRequestsScreenState extends ConsumerState<PendingAccessReque
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('User rejected'),
-            backgroundColor: Colors.orange,
+          SnackBar(
+            content: const Text('User rejected'),
+            backgroundColor: colorScheme.tertiaryContainer,
           ),
         );
       }
@@ -473,7 +477,7 @@ class _PendingAccessRequestsScreenState extends ConsumerState<PendingAccessReque
             content: Text(
               e is Failure ? e.message : 'Failed to reject user: ${e.toString()}',
             ),
-            backgroundColor: Colors.red,
+            backgroundColor: colorScheme.error,
           ),
         );
       }
