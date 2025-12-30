@@ -48,7 +48,7 @@ class MyApp extends ConsumerWidget {
     };
 
     return MaterialApp(
-      title: 'Reach Muslim',
+      title: 'Reach Muslims',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,

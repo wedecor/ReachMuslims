@@ -36,12 +36,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           );
     } catch (e) {
       if (mounted) {
+        final colorScheme = Theme.of(context).colorScheme;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
               e is Failure ? e.message : 'Login failed. Please try again.',
             ),
-            backgroundColor: Colors.red,
+            backgroundColor: colorScheme.error,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
@@ -81,7 +82,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       children: [
                         // Header Section
                         Text(
-                          'Reach Muslim',
+                          'Reach Muslims',
                           style: theme.textTheme.headlineMedium?.copyWith(
                             fontWeight: FontWeight.w600,
                             color: colorScheme.onSurface,
@@ -265,13 +266,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             elevation: 0,
                           ),
                           child: authState.isLoading
-                              ? const SizedBox(
+                              ? SizedBox(
                                   height: 20,
                                   width: 20,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
                                     valueColor:
-                                        AlwaysStoppedAnimation<Color>(Colors.white),
+                                        AlwaysStoppedAnimation<Color>(colorScheme.onPrimary),
                                   ),
                                 )
                               : const Text(

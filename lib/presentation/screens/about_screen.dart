@@ -22,7 +22,7 @@ class AboutScreen extends ConsumerWidget {
             const SizedBox(height: 24),
             // App Name
             Text(
-              'Reach Muslim',
+              'Reach Muslims',
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -30,7 +30,7 @@ class AboutScreen extends ConsumerWidget {
             const SizedBox(height: 8),
             // Version
             Text(
-              'Version 1.0.0',
+              'Version 1.1.0',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     color: Colors.grey[600],
                   ),
@@ -57,7 +57,7 @@ class AboutScreen extends ConsumerWidget {
             // Footer
             Center(
               child: Text(
-                '© 2024 Reach Muslim',
+                '© 2024 Reach Muslims',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Colors.grey[600],
                     ),
