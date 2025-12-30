@@ -72,16 +72,26 @@ class LeadRepositoryImpl implements LeadRepository {
       }
 
       // Search by name or phone
+      // Note: We'll search by name in Firestore, then filter by phone in memory
+      // This is because Firestore doesn't support OR queries or full-text search
       if (searchQuery != null && searchQuery.isNotEmpty) {
-        // Firestore doesn't support OR queries, so we'll filter in memory
-        // For better performance, we could use Algolia or similar
-        // For now, we'll search by name (case-insensitive start)
-        final lowerQuery = searchQuery.toLowerCase();
-        query = query.where('name', isGreaterThanOrEqualTo: lowerQuery)
-            .where('name', isLessThan: lowerQuery + '\uf8ff');
+        // Check if search query looks like a phone number (digits only)
+        final digitsOnly = searchQuery.replaceAll(RegExp(r'[^\d]'), '');
+        final cleanedQuery = searchQuery.replaceAll(RegExp(r'[\s\-\(\)]'), '');
+        if (digitsOnly.length >= 3 && digitsOnly == cleanedQuery) {
+          // Looks like a phone number - don't add name filter, will filter in memory
+          // Skip Firestore name search for phone numbers to avoid index issues
+        } else {
+          // Search by name in Firestore using range query
+          final lowerQuery = searchQuery.toLowerCase();
+          query = query.where('name', isGreaterThanOrEqualTo: lowerQuery)
+              .where('name', isLessThan: '$lowerQuery\uf8ff');
+        }
       }
 
       // Ordering - Use createdAt if date filter is active, otherwise updatedAt
+      // When we have name range filters, we must order by updatedAt (not name)
+      // because Firestore requires orderBy to come after range filters
       if (createdFrom != null || createdTo != null) {
         query = query.orderBy('createdAt', descending: true);
       } else {
