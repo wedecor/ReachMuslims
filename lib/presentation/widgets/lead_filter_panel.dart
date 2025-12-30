@@ -26,8 +26,10 @@ class _LeadFilterPanelState extends ConsumerState<LeadFilterPanel> {
     final isAdmin = authState.isAdmin;
     final user = authState.user;
 
+    final theme = Theme.of(context);
     return Card(
       margin: const EdgeInsets.all(8),
+      color: theme.cardTheme.color ?? theme.colorScheme.surfaceContainerHighest,
       child: Column(
         children: [
           // Header with toggle
@@ -180,7 +182,7 @@ class _LeadFilterPanelState extends ConsumerState<LeadFilterPanel> {
         labelText: 'Assigned To',
         border: const OutlineInputBorder(),
         filled: true,
-        fillColor: Theme.of(context).colorScheme.surface,
+        fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
       ),
       items: [
         const DropdownMenuItem<String?>(
@@ -215,7 +217,7 @@ class _LeadFilterPanelState extends ConsumerState<LeadFilterPanel> {
         labelText: 'Region',
         border: const OutlineInputBorder(),
         filled: true,
-        fillColor: Theme.of(context).colorScheme.surface,
+        fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
       ),
       items: [
         const DropdownMenuItem<UserRegion?>(
@@ -365,7 +367,7 @@ class _LeadFilterPanelState extends ConsumerState<LeadFilterPanel> {
         labelText: 'Follow-up Status',
         border: const OutlineInputBorder(),
         filled: true,
-        fillColor: Theme.of(context).colorScheme.surface,
+        fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
       ),
       items: FollowUpFilter.values.map((filter) {
         String label;
