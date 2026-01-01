@@ -14,12 +14,32 @@ class LeadSourceBadge extends StatelessWidget {
     switch (source) {
       case LeadSource.website:
         return Icons.language;
-      case LeadSource.referral:
-        return Icons.people;
-      case LeadSource.socialMedia:
-        return Icons.share;
+      case LeadSource.personal:
+        return Icons.person;
+      case LeadSource.facebook:
+        return Icons.facebook;
+      case LeadSource.instagram:
+        return Icons.camera_alt;
+      case LeadSource.linkedin:
+        return Icons.business;
       case LeadSource.whatsapp:
         return Icons.chat;
+      case LeadSource.telegram:
+        return Icons.send;
+      case LeadSource.matrimonySites:
+        return Icons.favorite;
+      case LeadSource.familyReferral:
+        return Icons.family_restroom;
+      case LeadSource.friendReferral:
+        return Icons.people;
+      case LeadSource.communityEvents:
+        return Icons.event;
+      case LeadSource.email:
+        return Icons.email;
+      case LeadSource.phoneCall:
+        return Icons.phone;
+      case LeadSource.socialMedia:
+        return Icons.share;
       case LeadSource.other:
         return Icons.info_outline;
     }
