@@ -24,6 +24,7 @@ import '../../domain/models/lead.dart';
 import 'lead_create_screen.dart';
 import 'lead_detail_screen.dart';
 import '../../core/utils/phone_number_formatter.dart';
+import '../../core/utils/status_color_utils.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -148,13 +149,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(
-                    color: Theme.of(context).colorScheme.outline.withOpacity(0.5),
+                    color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
                   ),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(
-                    color: Theme.of(context).colorScheme.outline.withOpacity(0.5),
+                    color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
                   ),
                 ),
                 focusedBorder: OutlineInputBorder(
@@ -212,51 +213,58 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 ),
           ),
           const SizedBox(height: 16),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                _buildKPICard(
+          Row(
+            children: [
+              Expanded(
+                child: _buildKPICard(
                   context,
                   title: 'Total Leads',
                   value: stats.totalLeads.toString(),
                   icon: Icons.people_outline,
                   color: Theme.of(context).colorScheme.primary,
                 ),
-                const SizedBox(width: 12),
-                _buildKPICard(
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildKPICard(
                   context,
                   title: 'New Leads',
                   value: stats.newLeads.toString(),
                   icon: Icons.new_releases_outlined,
                   color: Theme.of(context).colorScheme.secondary,
                 ),
-                const SizedBox(width: 12),
-                _buildKPICard(
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildKPICard(
                   context,
                   title: 'Follow-up',
                   value: stats.followUpLeads.toString(),
                   icon: Icons.history_outlined,
                   color: Theme.of(context).colorScheme.tertiary,
                 ),
-                const SizedBox(width: 12),
-                _buildKPICard(
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildKPICard(
                   context,
                   title: 'Converted',
                   value: stats.convertedLeads.toString(),
                   icon: Icons.check_circle_outline,
                   color: Theme.of(context).colorScheme.primaryContainer,
                 ),
-                const SizedBox(width: 12),
-                _buildKPICard(
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildKPICard(
                   context,
                   title: 'Starred',
                   value: stats.priorityLeads.toString(),
                   icon: Icons.star_outline,
                   color: Theme.of(context).colorScheme.tertiaryContainer,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ],
       ),
@@ -274,17 +282,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final colorScheme = theme.colorScheme;
     
     return Container(
-      width: 140,
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
         color: colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: colorScheme.outline.withOpacity(0.2),
+          color: colorScheme.outline.withValues(alpha: 0.2),
         ),
         boxShadow: [
           BoxShadow(
-            color: colorScheme.shadow.withOpacity(0.1),
+            color: colorScheme.shadow.withValues(alpha: 0.1),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -334,7 +341,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               value: stats.leadsContactedToday.toString(),
             ),
           ),
-          Container(width: 1, height: 30, color: colorScheme.primary.withOpacity(0.3)),
+          Container(width: 1, height: 30, color: colorScheme.primary.withValues(alpha: 0.3)),
           Expanded(
             child: _buildQuickStatItem(
               context,
@@ -378,7 +385,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               label,
               style: TextStyle(
                 fontSize: 12,
-                color: colorScheme.onPrimaryContainer.withOpacity(0.8),
+                color: colorScheme.onPrimaryContainer.withValues(alpha: 0.8),
               ),
             ),
           ],
@@ -547,21 +554,44 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           }
 
           final lead = state.leads[index];
-          return _buildLeadItem(lead);
+          return _buildLeadItem(lead, index);
         },
       ),
     );
   }
 
-  Widget _buildLeadItem(Lead lead) {
+  Widget _buildLeadItem(Lead lead, int index) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
+    // Alternating background for visual separation
+    final isEven = index % 2 == 0;
+    final cardColor = isEven 
+        ? colorScheme.surface 
+        : colorScheme.surfaceContainerHighest.withValues(alpha: 0.3);
+    
+    // Status color for left border
+    final statusColor = StatusColorUtils.getStatusColor(lead.status);
+    
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       elevation: 1,
+      color: cardColor,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
-      child: InkWell(
-        onTap: () {
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          border: Border(
+            left: BorderSide(
+              color: statusColor.withValues(alpha: 0.6),
+              width: 3,
+            ),
+          ),
+        ),
+        child: InkWell(
+          onTap: () {
           try {
             Navigator.push(
               context,
@@ -581,9 +611,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             }
           }
         },
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(12.0),
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -668,6 +698,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               LeadCardActionButtons(lead: lead),
             ],
           ),
+        ),
         ),
       ),
     );

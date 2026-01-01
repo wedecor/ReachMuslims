@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../providers/scheduled_followup_provider.dart';
+import '../../../domain/models/scheduled_followup.dart';
 
 /// Lazy-loading widget displaying next scheduled follow-up reminder
 /// Only loads data when the widget is actually visible
@@ -71,7 +72,7 @@ class _LazyNextScheduledFollowUpState extends ConsumerState<LazyNextScheduledFol
     // Get next pending follow-up
     final now = DateTime.now();
     final nextFollowUp = scheduledFollowUpState.scheduledFollowUps
-        .where((sf) => sf.status.name == 'pending' && sf.scheduledAt.isAfter(now))
+        .where((sf) => sf.status == ScheduledFollowUpStatus.pending && sf.scheduledAt.isAfter(now))
         .toList()
       ..sort((a, b) => a.scheduledAt.compareTo(b.scheduledAt));
 

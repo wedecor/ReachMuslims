@@ -3,8 +3,9 @@ enum UserRole {
   sales;
 
   static UserRole fromString(String value) {
+    final normalizedValue = value.toLowerCase();
     return UserRole.values.firstWhere(
-      (role) => role.name == value.toLowerCase(),
+      (role) => role.name.toLowerCase() == normalizedValue,
       orElse: () => UserRole.sales,
     );
   }
@@ -15,8 +16,9 @@ enum UserRegion {
   usa;
 
   static UserRegion fromString(String value) {
+    final normalizedValue = value.toLowerCase();
     return UserRegion.values.firstWhere(
-      (region) => region.name == value.toLowerCase(),
+      (region) => region.name.toLowerCase() == normalizedValue,
       orElse: () => UserRegion.india,
     );
   }
@@ -28,8 +30,9 @@ enum UserStatus {
   rejected;
 
   static UserStatus fromString(String value) {
+    final normalizedValue = value.toLowerCase();
     return UserStatus.values.firstWhere(
-      (status) => status.name == value.toLowerCase(),
+      (status) => status.name.toLowerCase() == normalizedValue,
       orElse: () => UserStatus.pending,
     );
   }

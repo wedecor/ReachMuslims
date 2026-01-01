@@ -124,6 +124,12 @@ class DashboardNotifier extends StateNotifier<DashboardStats> {
         _leadRepository.getLeadsCountByStatus(
           userId: userId,
           isAdmin: isAdmin,
+          status: LeadStatus.followUp,
+          region: region,
+        ),
+        _leadRepository.getLeadsCountByStatus(
+          userId: userId,
+          isAdmin: isAdmin,
           status: LeadStatus.inTalk,
           region: region,
         ),
@@ -201,15 +207,15 @@ class DashboardNotifier extends StateNotifier<DashboardStats> {
       state = DashboardStats(
         totalLeads: results[0],
         newLeads: results[1],
-        inTalkLeads: results[2],
-        convertedLeads: results[3],
-        notInterestedLeads: results[4],
-        indiaLeads: results[5],
-        usaLeads: results[6],
-        leadsToday: results[7],
-        leadsThisWeek: results[8],
-        priorityLeads: results[9],
-        followUpLeads: results[10],
+        inTalkLeads: results[3], // Updated index after adding followUp status
+        convertedLeads: results[4], // Updated index after adding followUp status
+        notInterestedLeads: results[5], // Updated index after adding followUp status
+        indiaLeads: results[6], // Updated index after adding followUp status
+        usaLeads: results[7], // Updated index after adding followUp status
+        leadsToday: results[8], // Updated index after adding followUp status
+        leadsThisWeek: results[9], // Updated index after adding followUp status
+        priorityLeads: results[10], // Updated index after adding followUp status
+        followUpLeads: results[11], // Updated index after adding followUp status
         leadsContactedToday: leadsContactedToday,
         pendingFollowUps: pendingFollowUps,
         isLoading: false,

@@ -133,7 +133,7 @@ class NotificationInboxScreen extends ConsumerWidget {
     final colorScheme = Theme.of(context).colorScheme;
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      color: isUnread ? colorScheme.primaryContainer.withOpacity(0.3) : null,
+      color: isUnread ? colorScheme.primaryContainer.withValues(alpha: 0.3) : null,
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor: isUnread 

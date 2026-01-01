@@ -1,10 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:firebase_auth_mocks/firebase_auth_mocks.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../../../lib/data/repositories/auth_repository_impl.dart';
 import '../../../lib/core/errors/failures.dart';
-import '../../../lib/core/constants/firebase_constants.dart';
 import '../../../lib/domain/models/user.dart';
 import '../../helpers/test_helpers.dart';
 

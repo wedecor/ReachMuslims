@@ -4,8 +4,9 @@ enum ScheduledFollowUpStatus {
   missed;
 
   static ScheduledFollowUpStatus fromString(String value) {
+    final normalizedValue = value.toLowerCase();
     return ScheduledFollowUpStatus.values.firstWhere(
-      (status) => status.name == value.toLowerCase(),
+      (status) => status.name.toLowerCase() == normalizedValue,
       orElse: () => ScheduledFollowUpStatus.pending,
     );
   }

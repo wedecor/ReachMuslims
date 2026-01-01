@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mocktail/mocktail.dart';
 import '../../../lib/presentation/providers/follow_up_provider.dart';
 import '../../../lib/presentation/providers/auth_provider.dart';
+import '../../../lib/presentation/providers/lead_list_provider.dart';
 import '../../../lib/domain/repositories/follow_up_repository.dart';
 import '../../../lib/domain/repositories/lead_repository.dart';
+import '../../../lib/domain/repositories/auth_repository.dart';
 import '../../../lib/domain/models/follow_up.dart';
 import '../../../lib/domain/models/lead.dart';
 import '../../../lib/domain/models/user.dart';
@@ -40,7 +42,7 @@ void main() {
           .thenAnswer((_) => Stream.value([]));
 
       // Act
-      final notifier = container.read(followUpListProvider(leadId).notifier);
+      container.read(followUpListProvider(leadId).notifier);
       final state = container.read(followUpListProvider(leadId));
 
       // Assert

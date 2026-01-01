@@ -28,8 +28,7 @@ class _ConnectivityListenerState extends ConsumerState<ConnectivityListener> {
     if (connectivityState.isInitialized) {
       if (_wasOffline && connectivityState.isOnline) {
         // Connection restored - mark pending writes as syncing
-        final syncNotifier = ref.read(offlineSyncProvider.notifier);
-        syncNotifier.state = syncNotifier.state.copyWith(isSyncing: true);
+        ref.read(offlineSyncProvider.notifier).markWritePending();
         
         // Show sync success after a brief delay
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -38,8 +37,7 @@ class _ConnectivityListenerState extends ConsumerState<ConnectivityListener> {
               // Clear pending writes after sync
               final syncState = ref.read(offlineSyncProvider);
               if (syncState.hasPendingWrites) {
-                ref.read(offlineSyncProvider.notifier).state = 
-                  const OfflineSyncState();
+                ref.read(offlineSyncProvider.notifier).markWriteSynced();
                 showSyncSuccessMessage(context);
               }
             }

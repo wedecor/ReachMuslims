@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/lead.dart';
 import '../../domain/models/user.dart';
@@ -87,8 +86,10 @@ class _LeadEditScreenState extends ConsumerState<LeadEditScreen> {
               : _locationController.text.trim(),
         );
 
+    if (!mounted) return;
+    
     final colorScheme = Theme.of(context).colorScheme;
-    if (success && mounted) {
+    if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Lead updated successfully'),

@@ -1,8 +1,6 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/lead.dart';
-import '../../domain/models/user.dart';
 import '../../core/services/lead_actions_service.dart';
 import '../providers/auth_provider.dart';
 import '../providers/lead_list_provider.dart';

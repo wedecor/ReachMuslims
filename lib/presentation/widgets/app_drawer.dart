@@ -12,6 +12,7 @@ import '../screens/reports_screen.dart';
 import '../screens/settings_screen.dart';
 import '../screens/about_screen.dart';
 import '../screens/my_tasks_screen.dart';
+import '../screens/expenses_screen.dart';
 import '../../domain/models/user.dart';
 
 class AppDrawer extends ConsumerWidget {
@@ -78,7 +79,7 @@ class AppDrawer extends ConsumerWidget {
           end: Alignment.bottomRight,
           colors: [
             Theme.of(context).colorScheme.primary,
-            Theme.of(context).colorScheme.primary.withOpacity(0.8),
+            Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
           ],
         ),
       ),
@@ -117,7 +118,7 @@ class AppDrawer extends ConsumerWidget {
               Text(
                 user.email,
                 style: TextStyle(
-                  color: Theme.of(context).colorScheme.onPrimary.withOpacity(0.9),
+                  color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.9),
                   fontSize: 14,
                 ),
               ),
@@ -131,7 +132,7 @@ class AppDrawer extends ConsumerWidget {
   Widget _buildUserInfo(BuildContext context, User user) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+      color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
       child: Column(
         children: [
           _buildInfoRow(
@@ -265,7 +266,7 @@ class AppDrawer extends ConsumerWidget {
             )
           : null,
       selected: isSelected,
-      selectedTileColor: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+      selectedTileColor: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
       onTap: () => _handleMenuItemTap(context, item, ref),
     );
   }
@@ -300,6 +301,9 @@ class AppDrawer extends ConsumerWidget {
       case DrawerMenuItemType.reports:
         screen = const ReportsScreen();
         break;
+      case DrawerMenuItemType.expenses:
+        screen = const ExpensesScreen();
+        break;
       case DrawerMenuItemType.settings:
         screen = const SettingsScreen();
         break;
@@ -311,12 +315,10 @@ class AppDrawer extends ConsumerWidget {
         return;
     }
 
-    if (screen != null) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => screen!),
-      );
-    }
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => screen!),
+    );
   }
 
   Widget _buildLogoutItem(BuildContext context, WidgetRef ref) {

@@ -1,7 +1,5 @@
 import 'dart:async';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../providers/connectivity_provider.dart';
 
 /// Tracks offline writes and sync status
 class OfflineSyncState {
@@ -30,11 +28,10 @@ class OfflineSyncState {
 
 /// Provider that tracks Firestore pending writes
 class OfflineSyncNotifier extends StateNotifier<OfflineSyncState> {
-  final FirebaseFirestore _firestore;
   StreamSubscription<void>? _pendingWritesSubscription;
   Timer? _checkTimer;
 
-  OfflineSyncNotifier(this._firestore) : super(const OfflineSyncState()) {
+  OfflineSyncNotifier() : super(const OfflineSyncState()) {
     _startMonitoring();
   }
 
@@ -89,7 +86,6 @@ class OfflineSyncNotifier extends StateNotifier<OfflineSyncState> {
 }
 
 final offlineSyncProvider = StateNotifierProvider<OfflineSyncNotifier, OfflineSyncState>((ref) {
-  final firestore = FirebaseFirestore.instance;
-  return OfflineSyncNotifier(firestore);
+  return OfflineSyncNotifier();
 });
 

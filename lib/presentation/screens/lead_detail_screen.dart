@@ -7,7 +7,6 @@ import '../providers/lead_assignment_provider.dart';
 import '../providers/user_list_provider.dart';
 import '../providers/lead_list_provider.dart';
 import '../providers/lead_delete_provider.dart';
-import '../../domain/repositories/user_repository.dart';
 import '../../domain/models/user.dart' as domain;
 import '../widgets/priority_star_toggle.dart';
 import '../widgets/last_contacted_indicator.dart';
@@ -16,7 +15,6 @@ import '../widgets/lead_edit_history_timeline_widget.dart';
 import '../widgets/status_dropdown.dart';
 import '../../core/utils/phone_number_formatter.dart';
 import '../providers/scheduled_followup_provider.dart';
-import '../../domain/models/scheduled_followup.dart';
 import 'lead_edit_screen.dart';
 import 'package:intl/intl.dart';
 
@@ -200,8 +198,8 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
                   decoration: BoxDecoration(
                     color: colorScheme.surfaceContainerHighest,
                     border: Border(
-                      top: BorderSide(color: colorScheme.outline.withOpacity(0.3)),
-                      bottom: BorderSide(color: colorScheme.outline.withOpacity(0.3)),
+                      top: BorderSide(color: colorScheme.outline.withValues(alpha: 0.3)),
+                      bottom: BorderSide(color: colorScheme.outline.withValues(alpha: 0.3)),
                     ),
                   ),
                   child: Column(
@@ -383,7 +381,9 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
 
     final success = await ref.read(leadDeleteProvider(lead.id).notifier).deleteLead();
 
-    if (success && mounted) {
+    if (!mounted) return;
+    
+    if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Lead deleted successfully'),
@@ -393,7 +393,7 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
       );
       // Navigate back to lead list
       Navigator.pop(context);
-    } else if (mounted) {
+    } else {
       final error = ref.read(leadDeleteProvider(lead.id)).error;
       if (error != null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -512,7 +512,9 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
 
       noteController.dispose();
 
-      if (success && mounted) {
+      if (!mounted) return;
+      
+      if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('Follow-up scheduled successfully'),
@@ -520,7 +522,7 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
             behavior: SnackBarBehavior.floating,
           ),
         );
-      } else if (mounted) {
+      } else {
         final error = ref.read(scheduledFollowUpListProvider(leadId)).error;
         if (error != null) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -535,126 +537,6 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
     } else {
       noteController.dispose();
     }
-  }
-
-  Widget _buildScheduledFollowUpsSection(String leadId, AuthState authState) {
-    if (!authState.isAuthenticated || authState.user == null) {
-      return const SizedBox.shrink();
-    }
-
-    final colorScheme = Theme.of(context).colorScheme;
-    final scheduledState = ref.watch(scheduledFollowUpListProvider(leadId));
-    final pendingFollowUps = scheduledState.scheduledFollowUps
-        .where((sf) => sf.status == ScheduledFollowUpStatus.pending)
-        .toList()
-      ..sort((a, b) => a.scheduledAt.compareTo(b.scheduledAt));
-
-    if (pendingFollowUps.isEmpty && !scheduledState.isLoading) {
-      return const SizedBox.shrink();
-    }
-
-    return Container(
-      margin: const EdgeInsets.all(8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: colorScheme.primaryContainer.withOpacity(0.3),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colorScheme.primary.withOpacity(0.5)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.schedule, size: 20, color: colorScheme.primary),
-              const SizedBox(width: 8),
-              Text(
-                'Scheduled Follow-ups',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: colorScheme.primary,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          if (scheduledState.isLoading)
-            const Center(child: CircularProgressIndicator())
-          else
-            ...pendingFollowUps.map((sf) => _buildScheduledFollowUpItem(sf, leadId)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildScheduledFollowUpItem(ScheduledFollowUp scheduledFollowUp, String leadId) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final now = DateTime.now();
-    final isOverdue = scheduledFollowUp.scheduledAt.isBefore(now);
-    final dateFormat = DateFormat('MMM dd, yyyy hh:mm a');
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: ListTile(
-        leading: Icon(
-          isOverdue ? Icons.warning : Icons.schedule,
-          color: isOverdue ? colorScheme.error : colorScheme.primary,
-        ),
-        title: Text(
-          dateFormat.format(scheduledFollowUp.scheduledAt),
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: isOverdue ? colorScheme.onErrorContainer : null,
-          ),
-        ),
-        subtitle: scheduledFollowUp.note != null && scheduledFollowUp.note!.isNotEmpty
-            ? Text(scheduledFollowUp.note!)
-            : null,
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.check, size: 20),
-              color: Theme.of(context).colorScheme.primary,
-              onPressed: () async {
-                final success = await ref
-                    .read(scheduledFollowUpListProvider(leadId).notifier)
-                    .markAsCompleted(scheduledFollowUp.id);
-                if (success && mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: const Text('Marked as completed'),
-                      backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                }
-              },
-              tooltip: 'Mark as completed',
-            ),
-            IconButton(
-              icon: const Icon(Icons.close, size: 20),
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              onPressed: () async {
-                final success = await ref
-                    .read(scheduledFollowUpListProvider(leadId).notifier)
-                    .deleteScheduledFollowUp(scheduledFollowUp.id);
-                if (success && mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: const Text('Reminder deleted'),
-                      backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                }
-              },
-              tooltip: 'Delete',
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   Widget _buildAssignmentDropdown(BuildContext context, AuthState authState) {
@@ -795,7 +677,7 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
                 : null;
 
             return DropdownButtonFormField<String?>(
-              value: dropdownValue,
+              initialValue: dropdownValue,
               style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
               decoration: InputDecoration(
                 border: OutlineInputBorder(
@@ -824,7 +706,9 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
                           .read(leadAssignmentProvider(widget.lead.id).notifier)
                           .assignLead(newUserId, assignedToName);
 
-                      if (success && mounted) {
+                      if (!mounted) return;
+                      
+                      if (success) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(newUserId != null
@@ -836,7 +720,7 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
                         );
                         // Refresh lead list to get updated lead
                         ref.read(leadListProvider.notifier).refresh();
-                      } else if (mounted) {
+                      } else {
                         final error = ref.read(leadAssignmentProvider(widget.lead.id)).error;
                         if (error != null) {
                           ScaffoldMessenger.of(context).showSnackBar(

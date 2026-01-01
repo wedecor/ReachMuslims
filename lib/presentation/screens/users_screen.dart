@@ -4,7 +4,6 @@ import '../../domain/models/user.dart';
 import '../../domain/repositories/user_repository.dart';
 import '../../data/repositories/user_repository_impl.dart';
 import '../../core/errors/failures.dart';
-import '../providers/auth_provider.dart';
 
 final teamDirectoryRepositoryProvider = Provider<UserRepository>((ref) {
   return UserRepositoryImpl();
@@ -149,7 +148,7 @@ class UsersScreen extends ConsumerWidget {
                       user.phone!,
                       style: TextStyle(
                         fontSize: 12,
-                        color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
+                        color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
                       ),
                     ),
                   ],

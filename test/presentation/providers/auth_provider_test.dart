@@ -37,7 +37,6 @@ void main() {
             .thenAnswer((_) => Stream.value(null));
 
         // Act
-        final notifier = container.read(authProvider.notifier);
         final initialState = container.read(authProvider);
 
         // Assert
@@ -53,7 +52,7 @@ void main() {
             .thenAnswer((_) => Stream.value(null));
 
         // Act - trigger provider creation
-        final notifier = container.read(authProvider.notifier);
+        container.read(authProvider.notifier);
         // Wait for initialization to complete
         await Future.delayed(const Duration(milliseconds: 150));
         final state = container.read(authProvider);

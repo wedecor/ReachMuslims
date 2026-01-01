@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../providers/scheduled_followup_provider.dart';
+import '../../../domain/models/scheduled_followup.dart';
 
 /// Displays next scheduled follow-up reminder
 class NextScheduledFollowUp extends ConsumerWidget {
@@ -46,7 +47,7 @@ class NextScheduledFollowUp extends ConsumerWidget {
     // Get next pending follow-up
     final now = DateTime.now();
     final nextFollowUp = scheduledFollowUpState.scheduledFollowUps
-        .where((sf) => sf.status.name == 'pending' && sf.scheduledAt.isAfter(now))
+        .where((sf) => sf.status == ScheduledFollowUpStatus.pending && sf.scheduledAt.isAfter(now))
         .toList()
       ..sort((a, b) => a.scheduledAt.compareTo(b.scheduledAt));
 

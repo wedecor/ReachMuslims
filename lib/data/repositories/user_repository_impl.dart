@@ -19,7 +19,7 @@ class UserRepositoryImpl implements UserRepository {
           .collection(FirebaseConstants.usersCollection)
           .where('region', isEqualTo: region.name)
           .where('active', isEqualTo: true)
-          .where('status', isEqualTo: 'approved')
+          .where('status', isEqualTo: UserStatus.approved.name)
           .get();
 
       return snapshot.docs
@@ -57,7 +57,7 @@ class UserRepositoryImpl implements UserRepository {
     try {
       final snapshot = await _firestore
           .collection(FirebaseConstants.usersCollection)
-          .where('status', isEqualTo: 'pending')
+          .where('status', isEqualTo: UserStatus.pending.name)
           .orderBy('createdAt', descending: false)
           .get();
 
@@ -80,7 +80,7 @@ class UserRepositoryImpl implements UserRepository {
       final snapshot = await _firestore
           .collection(FirebaseConstants.usersCollection)
           .where('active', isEqualTo: true)
-          .where('status', isEqualTo: 'approved')
+          .where('status', isEqualTo: UserStatus.approved.name)
           .orderBy('name', descending: false)
           .get();
 
@@ -106,7 +106,7 @@ class UserRepositoryImpl implements UserRepository {
     try {
       final snapshot = await _firestore
           .collection(FirebaseConstants.usersCollection)
-          .where('status', isEqualTo: 'approved')
+          .where('status', isEqualTo: UserStatus.approved.name)
           .orderBy('name', descending: false)
           .get();
 
@@ -133,7 +133,7 @@ class UserRepositoryImpl implements UserRepository {
           .collection(FirebaseConstants.usersCollection)
           .doc(userId)
           .update({
-        'status': 'approved',
+        'status': UserStatus.approved.name,
         'active': true,
         'role': role.name,
         'region': region.name,
@@ -156,7 +156,7 @@ class UserRepositoryImpl implements UserRepository {
   }) async {
     try {
       final updateData = <String, dynamic>{
-        'status': 'rejected',
+        'status': UserStatus.rejected.name,
         'active': false,
         'rejectedBy': rejectedBy,
         'rejectedAt': FieldValue.serverTimestamp(),

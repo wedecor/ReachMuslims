@@ -29,28 +29,28 @@ void main() {
 
     test('should initialize with empty filters', () {
       final state = container.read(leadFilterProvider);
-      expect(state.status, isNull);
+      expect(state.statuses, isEmpty);
       expect(state.assignedTo, isNull);
       expect(state.searchQuery, isNull);
       expect(state.hasFilters, isFalse);
     });
 
-    test('should set status filter', () {
+    test('should toggle status filter', () {
       final notifier = container.read(leadFilterProvider.notifier);
-      notifier.setStatus(LeadStatus.inTalk);
+      notifier.toggleStatus(LeadStatus.inTalk);
 
       final state = container.read(leadFilterProvider);
-      expect(state.status, equals(LeadStatus.inTalk));
+      expect(state.statuses, contains(LeadStatus.inTalk));
       expect(state.hasFilters, isTrue);
     });
 
     test('should clear status filter', () {
       final notifier = container.read(leadFilterProvider.notifier);
-      notifier.setStatus(LeadStatus.inTalk);
-      notifier.setStatus(null);
+      notifier.toggleStatus(LeadStatus.inTalk);
+      notifier.toggleStatus(LeadStatus.inTalk); // Toggle again to remove
 
       final state = container.read(leadFilterProvider);
-      expect(state.status, isNull);
+      expect(state.statuses, isEmpty);
     });
 
     test('should set search query', () {
@@ -64,13 +64,13 @@ void main() {
 
     test('should clear all filters', () {
       final notifier = container.read(leadFilterProvider.notifier);
-      notifier.setStatus(LeadStatus.inTalk);
+      notifier.toggleStatus(LeadStatus.inTalk);
       notifier.setAssignedTo('user123');
       notifier.setSearchQuery('test');
       notifier.clearFilters();
 
       final state = container.read(leadFilterProvider);
-      expect(state.status, isNull);
+      expect(state.statuses, isEmpty);
       expect(state.assignedTo, isNull);
       expect(state.searchQuery, isNull);
       expect(state.hasFilters, isFalse);
@@ -221,7 +221,7 @@ void main() {
             userId: any(named: 'userId'),
             isAdmin: any(named: 'isAdmin'),
             region: any(named: 'region'),
-            status: any(named: 'status'),
+            statuses: any(named: 'statuses'),
             assignedTo: any(named: 'assignedTo'),
             searchQuery: any(named: 'searchQuery'),
             limit: any(named: 'limit'),
@@ -241,7 +241,7 @@ void main() {
             userId: any(named: 'userId'),
             isAdmin: true,
             region: any(named: 'region'),
-            status: any(named: 'status'),
+            statuses: any(named: 'statuses'),
             assignedTo: any(named: 'assignedTo'),
             searchQuery: any(named: 'searchQuery'),
             limit: 20,
@@ -262,7 +262,7 @@ void main() {
             userId: any(named: 'userId'),
             isAdmin: false,
             region: any(named: 'region'),
-            status: any(named: 'status'),
+            statuses: any(named: 'statuses'),
             assignedTo: any(named: 'assignedTo'),
             searchQuery: any(named: 'searchQuery'),
             limit: any(named: 'limit'),
@@ -281,7 +281,7 @@ void main() {
             userId: any(named: 'userId'),
             isAdmin: false,
             region: any(named: 'region'),
-            status: any(named: 'status'),
+            statuses: any(named: 'statuses'),
             assignedTo: any(named: 'assignedTo'),
             searchQuery: any(named: 'searchQuery'),
             limit: 20,
@@ -303,7 +303,7 @@ void main() {
             userId: any(named: 'userId'),
             isAdmin: any(named: 'isAdmin'),
             region: any(named: 'region'),
-            status: any(named: 'status'),
+            statuses: any(named: 'statuses'),
             assignedTo: any(named: 'assignedTo'),
             searchQuery: any(named: 'searchQuery'),
             limit: any(named: 'limit'),
@@ -340,7 +340,7 @@ void main() {
             userId: any(named: 'userId'),
             isAdmin: any(named: 'isAdmin'),
             region: any(named: 'region'),
-            status: any(named: 'status'),
+            statuses: any(named: 'statuses'),
             assignedTo: any(named: 'assignedTo'),
             searchQuery: any(named: 'searchQuery'),
             limit: 20,

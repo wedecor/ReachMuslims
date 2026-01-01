@@ -3,7 +3,6 @@ import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../lib/data/repositories/follow_up_repository_impl.dart';
 import '../../../lib/core/constants/firebase_constants.dart';
-import '../../../lib/core/errors/failures.dart';
 import '../../helpers/test_helpers.dart';
 
 void main() {

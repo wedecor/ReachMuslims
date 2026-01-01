@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mocktail/mocktail.dart';
 import '../../../lib/presentation/screens/lead_detail_screen.dart';
+import '../../../lib/presentation/providers/lead_list_provider.dart';
 import '../../../lib/presentation/providers/lead_assignment_provider.dart';
 import '../../../lib/presentation/providers/user_list_provider.dart';
 import '../../../lib/presentation/providers/auth_provider.dart';

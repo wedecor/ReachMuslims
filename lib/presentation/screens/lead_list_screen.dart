@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/lead.dart';
@@ -10,7 +10,6 @@ import '../widgets/lead_filter_panel.dart';
 import '../widgets/priority_star_toggle.dart';
 import '../widgets/compact_last_contacted.dart';
 import '../widgets/lead_card_action_buttons.dart';
-import '../widgets/swipeable_lead_card.dart';
 import '../widgets/offline_banner.dart';
 import '../widgets/pending_sync_indicator.dart';
 import '../widgets/lead_tile_info/assigned_user_badge.dart';
@@ -37,7 +36,9 @@ class _LeadListScreenState extends ConsumerState<LeadListScreen>
     with SingleTickerProviderStateMixin {
   final _searchController = TextEditingController();
   bool _hasSearchText = false;
+  Timer? _searchDebounceTimer;
   final _scrollControllers = [
+    ScrollController(),
     ScrollController(),
     ScrollController(),
     ScrollController(),
@@ -47,7 +48,7 @@ class _LeadListScreenState extends ConsumerState<LeadListScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
     for (final controller in _scrollControllers) {
       controller.addListener(() => _onScroll(controller));
     }
@@ -66,6 +67,7 @@ class _LeadListScreenState extends ConsumerState<LeadListScreen>
 
   @override
   void dispose() {
+    _searchDebounceTimer?.cancel();
     _searchController.dispose();
     _tabController.dispose();
     for (final controller in _scrollControllers) {
@@ -85,8 +87,6 @@ class _LeadListScreenState extends ConsumerState<LeadListScreen>
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
     final leadListState = ref.watch(leadListProvider);
-    final filterState = ref.watch(leadFilterProvider);
-    final isAdmin = authState.isAdmin;
 
     return Scaffold(
       appBar: AppBar(
@@ -151,13 +151,13 @@ class _LeadListScreenState extends ConsumerState<LeadListScreen>
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide(
-                        color: colorScheme.outline.withOpacity(0.5),
+                        color: colorScheme.outline.withValues(alpha: 0.5),
                       ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide(
-                        color: colorScheme.outline.withOpacity(0.5),
+                        color: colorScheme.outline.withValues(alpha: 0.5),
                       ),
                     ),
                     focusedBorder: OutlineInputBorder(
@@ -176,9 +176,10 @@ class _LeadListScreenState extends ConsumerState<LeadListScreen>
                       _hasSearchText = value.isNotEmpty;
                     });
                     ref.read(leadFilterProvider.notifier).setSearchQuery(value.isEmpty ? null : value);
-                    // Debounce search
-                    Future.delayed(const Duration(milliseconds: 500), () {
-                      if (_searchController.text == value) {
+                    // Debounce search - cancel previous timer
+                    _searchDebounceTimer?.cancel();
+                    _searchDebounceTimer = Timer(const Duration(milliseconds: 500), () {
+                      if (_searchController.text == value && mounted) {
                         ref.read(leadListProvider.notifier).refresh();
                       }
                     });
@@ -194,6 +195,7 @@ class _LeadListScreenState extends ConsumerState<LeadListScreen>
             controller: _tabController,
             tabs: const [
               Tab(text: 'New'),
+              Tab(text: 'Follow Up'),
               Tab(text: 'In Talk'),
               Tab(text: 'Converted'),
             ],
@@ -207,8 +209,9 @@ class _LeadListScreenState extends ConsumerState<LeadListScreen>
               controller: _tabController,
               children: [
                 _buildFilteredLeadList(leadListState, LeadStatus.newLead, _scrollControllers[0]),
-                _buildFilteredLeadList(leadListState, LeadStatus.inTalk, _scrollControllers[1]),
-                _buildFilteredLeadList(leadListState, LeadStatus.converted, _scrollControllers[2]),
+                _buildFilteredLeadList(leadListState, LeadStatus.followUp, _scrollControllers[1]),
+                _buildFilteredLeadList(leadListState, LeadStatus.inTalk, _scrollControllers[2]),
+                _buildFilteredLeadList(leadListState, LeadStatus.converted, _scrollControllers[3]),
               ],
             ),
           ),
@@ -223,6 +226,7 @@ class _LeadListScreenState extends ConsumerState<LeadListScreen>
     ScrollController scrollController,
   ) {
     // Filter leads by status
+    // Note: Search is already applied in the repository, so we just filter by status here
     final filteredLeads = state.leads.where((lead) => lead.status == status).toList();
 
     if (state.isLoading && filteredLeads.isEmpty) {
@@ -419,11 +423,7 @@ class _LeadListScreenState extends ConsumerState<LeadListScreen>
         ),
       );
 
-      // Wrap in swipeable card for mobile
-      return SwipeableLeadCard(
-        lead: lead,
-        child: card,
-      );
+      return card;
     } catch (e) {
       debugPrint('Error building lead item: $e');
       // Return a fallback card if rendering fails

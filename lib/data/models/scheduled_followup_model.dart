@@ -16,10 +16,10 @@ class ScheduledFollowUpModel extends ScheduledFollowUp {
     final data = doc.data() as Map<String, dynamic>;
     return ScheduledFollowUpModel(
       id: doc.id,
-      leadId: data['leadId'] as String,
-      scheduledAt: (data['scheduledAt'] as Timestamp).toDate(),
+      leadId: data['leadId'] as String? ?? '',
+      scheduledAt: (data['scheduledAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       note: data['note'] as String?,
-      createdBy: data['createdBy'] as String,
+      createdBy: data['createdBy'] as String? ?? '',
       status: ScheduledFollowUpStatus.fromString(data['status'] as String? ?? 'pending'),
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );

@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/user.dart';
 import '../providers/user_management_provider.dart';
 import '../providers/auth_provider.dart';
-import '../../core/errors/failures.dart';
 
 class UserManagementScreen extends ConsumerStatefulWidget {
   const UserManagementScreen({super.key});
@@ -304,7 +303,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
         builder: (context, setDialogState) => AlertDialog(
           title: const Text('Change Role'),
           content: DropdownButtonFormField<UserRole>(
-            value: selectedRole,
+            initialValue: selectedRole,
             decoration: const InputDecoration(
               labelText: 'Role',
               border: OutlineInputBorder(),
@@ -352,7 +351,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
         builder: (context, setDialogState) => AlertDialog(
           title: const Text('Change Region'),
           content: DropdownButtonFormField<UserRegion>(
-            value: selectedRegion,
+            initialValue: selectedRegion,
             decoration: const InputDecoration(
               labelText: 'Region',
               border: OutlineInputBorder(),

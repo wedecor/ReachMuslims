@@ -72,22 +72,10 @@ class LeadRepositoryImpl implements LeadRepository {
       }
 
       // Search by name or phone
-      // Note: We'll search by name in Firestore, then filter by phone in memory
-      // This is because Firestore doesn't support OR queries or full-text search
-      if (searchQuery != null && searchQuery.isNotEmpty) {
-        // Check if search query looks like a phone number (digits only)
-        final digitsOnly = searchQuery.replaceAll(RegExp(r'[^\d]'), '');
-        final cleanedQuery = searchQuery.replaceAll(RegExp(r'[\s\-\(\)]'), '');
-        if (digitsOnly.length >= 3 && digitsOnly == cleanedQuery) {
-          // Looks like a phone number - don't add name filter, will filter in memory
-          // Skip Firestore name search for phone numbers to avoid index issues
-        } else {
-          // Search by name in Firestore using range query
-          final lowerQuery = searchQuery.toLowerCase();
-          query = query.where('name', isGreaterThanOrEqualTo: lowerQuery)
-              .where('name', isLessThan: '$lowerQuery\uf8ff');
-        }
-      }
+      // Note: Firestore doesn't support full-text search (contains), so we'll
+      // fetch leads and filter in memory. For better performance with large datasets,
+      // we increase the limit when searching.
+      // Don't add Firestore query for search - we'll filter in memory instead
 
       // Ordering - Use createdAt if date filter is active, otherwise updatedAt
       // When we have name range filters, we must order by updatedAt (not name)
@@ -109,8 +97,9 @@ class LeadRepositoryImpl implements LeadRepository {
         }
       }
 
-      // Limit
-      query = query.limit(limit);
+      // Limit - increase limit when searching to allow better in-memory filtering
+      final searchLimit = (searchQuery != null && searchQuery.isNotEmpty) ? (limit * 5) : limit;
+      query = query.limit(searchLimit);
 
       final snapshot = await query.get();
 
@@ -183,7 +172,8 @@ class LeadRepositoryImpl implements LeadRepository {
             .limit(10); // Small limit for in-memory filtering
         final unassignedSnapshot = await unassignedQuery.get();
         for (var doc in unassignedSnapshot.docs) {
-          final data = doc.data() as Map<String, dynamic>;
+          final data = doc.data() as Map<String, dynamic>?;
+          if (data == null) continue;
           final assignedTo = data['assignedTo'] as String?;
           if (assignedTo == null || assignedTo.isEmpty) {
             return LeadModel.fromFirestore(doc);

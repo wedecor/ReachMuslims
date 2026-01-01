@@ -9,6 +9,7 @@ enum DrawerMenuItemType {
   userManagement,
   users,
   reports,
+  expenses,
   settings,
   about,
   logout,
@@ -100,6 +101,15 @@ class DrawerMenuItem {
           selectedIcon: Icons.assessment,
           requiresAdmin: true,
           route: '/reports',
+        ),
+      if (isAdmin)
+        const DrawerMenuItem(
+          type: DrawerMenuItemType.expenses,
+          title: 'Expenses',
+          icon: Icons.receipt_long_outlined,
+          selectedIcon: Icons.receipt_long,
+          requiresAdmin: true,
+          route: '/expenses',
         ),
       const DrawerMenuItem(
         type: DrawerMenuItemType.settings,

@@ -26,14 +26,6 @@ service cloud.firestore {
         : (getUserDoc().data != null ? getUserDoc().data.role : null);
     }
     
-    // Helper function to get status from custom claims (PREFERRED)
-    // Falls back to Firestore document read if custom claims not set
-    function getUserStatus() {
-      return request.auth.token.status != null 
-        ? request.auth.token.status 
-        : (getUserDoc().data != null ? getUserDoc().data.status : null);
-    }
-    
     // Helper function to get active status
     // For list queries, prefer custom claims (faster, more reliable)
     // Falls back to Firestore read only if custom claims not available
@@ -61,27 +53,6 @@ service cloud.firestore {
              (isAuthenticated() && 
               getUserRole() == 'admin' && 
               isUserActive());
-    }
-    
-    // Helper function to check if user is sales (using custom claims only - FAST)
-    function isSalesFromClaims() {
-      return isAuthenticated() && 
-             request.auth.token.role == 'sales' &&
-             request.auth.token.status == 'approved' &&
-             request.auth.token.active == true;
-    }
-    
-    // Helper function to check if user is sales (with fallback)
-    function isSales() {
-      return isSalesFromClaims() ||
-             (isAuthenticated() && 
-              getUserRole() == 'sales' && 
-              isUserActive());
-    }
-    
-    // Helper function to get user region (from Firestore - needed for region checks)
-    function getUserRegion() {
-      return getUserDoc().data != null ? getUserDoc().data.region : null;
     }
     
     // ====================================================
@@ -242,6 +213,34 @@ service cloud.firestore {
       // DELETE: Users can delete their own scheduled follow-ups
       allow delete: if isAuthenticated() &&
         resource.data.createdBy == request.auth.uid;
+    }
+    
+    // ====================================================
+    // EXPENSES COLLECTION
+    // ====================================================
+    match /expenses/{expenseId} {
+      // LIST: Only admins can list expenses
+      allow list: if isAdminFromClaims();
+      
+      // GET: Only admins can read expenses
+      allow get: if isAdminFromClaims();
+      
+      // CREATE: Only admins can create expenses
+      allow create: if isAdminFromClaims() &&
+        request.resource.data.platform is string &&
+        request.resource.data.amount is number &&
+        request.resource.data.currency is string &&
+        request.resource.data.date is timestamp &&
+        request.resource.data.createdBy is string &&
+        request.resource.data.region is string &&
+        request.resource.data.createdAt is timestamp &&
+        request.resource.data.updatedAt is timestamp;
+      
+      // UPDATE: Only admins can update expenses
+      allow update: if isAdminFromClaims();
+      
+      // DELETE: Only admins can delete expenses
+      allow delete: if isAdminFromClaims();
     }
   }
 }

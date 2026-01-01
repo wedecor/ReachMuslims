@@ -4,7 +4,6 @@ import 'package:intl/intl.dart';
 import '../providers/scheduled_followup_provider.dart';
 import '../providers/auth_provider.dart';
 import '../../domain/models/scheduled_followup.dart';
-import '../../domain/repositories/lead_repository.dart';
 import '../providers/lead_list_provider.dart';
 import 'lead_detail_screen.dart';
 import '../../domain/models/lead.dart';
@@ -99,7 +98,7 @@ class MyTasksScreen extends ConsumerWidget {
             const SizedBox(height: 8),
             Text(
               'All your scheduled follow-ups are completed',
-              style: TextStyle(color: colorScheme.onSurfaceVariant.withOpacity(0.7)),
+              style: TextStyle(color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7)),
               textAlign: TextAlign.center,
             ),
           ],
@@ -110,7 +109,6 @@ class MyTasksScreen extends ConsumerWidget {
     // Group tasks by date
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final tomorrow = today.add(const Duration(days: 1));
 
     final overdueTasks = <ScheduledFollowUp>[];
     final todayTasks = <ScheduledFollowUp>[];

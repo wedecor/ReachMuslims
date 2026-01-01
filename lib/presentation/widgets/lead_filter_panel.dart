@@ -72,13 +72,15 @@ class _LeadFilterPanelState extends ConsumerState<LeadFilterPanel> {
             const Divider(height: 1),
             ConstrainedBox(
               constraints: BoxConstraints(
-                maxHeight: MediaQuery.of(context).size.height * 0.6,
+                maxHeight: MediaQuery.of(context).size.height * 0.5,
               ),
               child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                   // Status Filter (Multi-select)
                   _buildStatusFilter(filterState),
@@ -177,7 +179,7 @@ class _LeadFilterPanelState extends ConsumerState<LeadFilterPanel> {
     final userListState = ref.watch(userListProvider(region));
 
     return DropdownButtonFormField<String?>(
-      value: ref.watch(leadFilterProvider).assignedTo,
+      initialValue: ref.watch(leadFilterProvider).assignedTo,
       decoration: InputDecoration(
         labelText: 'Assigned To',
         border: const OutlineInputBorder(),
@@ -212,7 +214,7 @@ class _LeadFilterPanelState extends ConsumerState<LeadFilterPanel> {
 
   Widget _buildRegionFilter(LeadFilterState filterState) {
     return DropdownButtonFormField<UserRegion?>(
-      value: filterState.region,
+      initialValue: filterState.region,
       decoration: InputDecoration(
         labelText: 'Region',
         border: const OutlineInputBorder(),
@@ -362,7 +364,7 @@ class _LeadFilterPanelState extends ConsumerState<LeadFilterPanel> {
 
   Widget _buildFollowUpFilter(LeadFilterState filterState) {
     return DropdownButtonFormField<FollowUpFilter>(
-      value: filterState.followUpFilter,
+      initialValue: filterState.followUpFilter,
       decoration: InputDecoration(
         labelText: 'Follow-up Status',
         border: const OutlineInputBorder(),

@@ -28,7 +28,7 @@ class LeadModel extends Lead {
       phone: data['phone'] as String? ?? '',
       location: data['location'] as String?,
       region: domain.UserRegion.fromString(data['region'] as String? ?? 'india'),
-      status: LeadStatus.fromString(data['status'] as String? ?? 'new'),
+      status: LeadStatus.fromString(data['status'] as String? ?? 'newLead'),
       assignedTo: data['assignedTo'] as String?,
       assignedToName: data['assignedToName'] as String?,
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),

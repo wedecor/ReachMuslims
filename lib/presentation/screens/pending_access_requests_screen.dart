@@ -166,7 +166,7 @@ class _PendingAccessRequestsScreenState extends ConsumerState<PendingAccessReque
                           'Requested: ${dateFormat.format(user.createdAt!)}',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.7),
+                            color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
                           ),
                         ),
                       ],

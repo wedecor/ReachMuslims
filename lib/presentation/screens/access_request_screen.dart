@@ -77,7 +77,7 @@ class _AccessRequestScreenState extends ConsumerState<AccessRequestScreen> {
 
     if (_isSubmitted) {
       return Scaffold(
-        backgroundColor: colorScheme.background,
+        backgroundColor: colorScheme.surface,
         body: SafeArea(
           child: Center(
             child: ConstrainedBox(
@@ -111,7 +111,7 @@ class _AccessRequestScreenState extends ConsumerState<AccessRequestScreen> {
                       Text(
                         'Your access request has been submitted.\nAn admin will review and activate your account.',
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: colorScheme.onSurface.withOpacity(0.7),
+                          color: colorScheme.onSurface.withValues(alpha: 0.7),
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -146,7 +146,7 @@ class _AccessRequestScreenState extends ConsumerState<AccessRequestScreen> {
     }
 
     return Scaffold(
-      backgroundColor: colorScheme.background,
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
         title: const Text('Request Access'),
         elevation: 0,
@@ -182,7 +182,7 @@ class _AccessRequestScreenState extends ConsumerState<AccessRequestScreen> {
                         Text(
                           'Submit your information to request access to the Lead Management Portal',
                           style: theme.textTheme.bodyMedium?.copyWith(
-                            color: colorScheme.onSurface.withOpacity(0.7),
+                            color: colorScheme.onSurface.withValues(alpha: 0.7),
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -206,13 +206,13 @@ class _AccessRequestScreenState extends ConsumerState<AccessRequestScreen> {
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(6),
                               borderSide: BorderSide(
-                                color: colorScheme.outline.withOpacity(0.5),
+                                color: colorScheme.outline.withValues(alpha: 0.5),
                               ),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(6),
                               borderSide: BorderSide(
-                                color: colorScheme.outline.withOpacity(0.5),
+                                color: colorScheme.outline.withValues(alpha: 0.5),
                               ),
                             ),
                             focusedBorder: OutlineInputBorder(
@@ -269,13 +269,13 @@ class _AccessRequestScreenState extends ConsumerState<AccessRequestScreen> {
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(6),
                               borderSide: BorderSide(
-                                color: colorScheme.outline.withOpacity(0.5),
+                                color: colorScheme.outline.withValues(alpha: 0.5),
                               ),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(6),
                               borderSide: BorderSide(
-                                color: colorScheme.outline.withOpacity(0.5),
+                                color: colorScheme.outline.withValues(alpha: 0.5),
                               ),
                             ),
                             focusedBorder: OutlineInputBorder(
@@ -337,7 +337,7 @@ class _AccessRequestScreenState extends ConsumerState<AccessRequestScreen> {
                                 _obscurePassword
                                     ? Icons.visibility_outlined
                                     : Icons.visibility_off_outlined,
-                                color: colorScheme.onSurface.withOpacity(0.6),
+                                color: colorScheme.onSurface.withValues(alpha: 0.6),
                               ),
                               onPressed: () {
                                 setState(() {
@@ -348,13 +348,13 @@ class _AccessRequestScreenState extends ConsumerState<AccessRequestScreen> {
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(6),
                               borderSide: BorderSide(
-                                color: colorScheme.outline.withOpacity(0.5),
+                                color: colorScheme.outline.withValues(alpha: 0.5),
                               ),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(6),
                               borderSide: BorderSide(
-                                color: colorScheme.outline.withOpacity(0.5),
+                                color: colorScheme.outline.withValues(alpha: 0.5),
                               ),
                             ),
                             focusedBorder: OutlineInputBorder(
@@ -416,7 +416,7 @@ class _AccessRequestScreenState extends ConsumerState<AccessRequestScreen> {
                                 _obscureConfirmPassword
                                     ? Icons.visibility_outlined
                                     : Icons.visibility_off_outlined,
-                                color: colorScheme.onSurface.withOpacity(0.6),
+                                color: colorScheme.onSurface.withValues(alpha: 0.6),
                               ),
                               onPressed: () {
                                 setState(() {
@@ -427,13 +427,13 @@ class _AccessRequestScreenState extends ConsumerState<AccessRequestScreen> {
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(6),
                               borderSide: BorderSide(
-                                color: colorScheme.outline.withOpacity(0.5),
+                                color: colorScheme.outline.withValues(alpha: 0.5),
                               ),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(6),
                               borderSide: BorderSide(
-                                color: colorScheme.outline.withOpacity(0.5),
+                                color: colorScheme.outline.withValues(alpha: 0.5),
                               ),
                             ),
                             focusedBorder: OutlineInputBorder(
@@ -493,13 +493,13 @@ class _AccessRequestScreenState extends ConsumerState<AccessRequestScreen> {
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(6),
                               borderSide: BorderSide(
-                                color: colorScheme.outline.withOpacity(0.5),
+                                color: colorScheme.outline.withValues(alpha: 0.5),
                               ),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(6),
                               borderSide: BorderSide(
-                                color: colorScheme.outline.withOpacity(0.5),
+                                color: colorScheme.outline.withValues(alpha: 0.5),
                               ),
                             ),
                             focusedBorder: OutlineInputBorder(

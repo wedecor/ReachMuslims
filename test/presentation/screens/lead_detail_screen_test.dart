@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mocktail/mocktail.dart';
 import '../../../lib/presentation/screens/lead_detail_screen.dart';
+import '../../../lib/presentation/providers/lead_list_provider.dart';
+import '../../../lib/core/errors/failures.dart';
 import '../../../lib/presentation/providers/follow_up_provider.dart';
 import '../../../lib/presentation/providers/auth_provider.dart';
 import '../../../lib/domain/repositories/follow_up_repository.dart';

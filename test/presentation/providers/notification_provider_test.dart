@@ -34,7 +34,7 @@ void main() {
           .thenAnswer((_) => Stream.value([]));
 
       // Act
-      final notifier = container.read(notificationListProvider(userId).notifier);
+      container.read(notificationListProvider(userId).notifier);
       final state = container.read(notificationListProvider(userId));
 
       // Assert

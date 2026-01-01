@@ -6,6 +6,7 @@ import '../../domain/models/lead.dart';
 /// This is the single source of truth for all status colors.
 /// STATUS → COLOR MAPPING (LOCKED):
 /// - New → Blue
+/// - Follow Up → Purple
 /// - In Talk → Orange
 /// - Not Interested → Red
 /// - Converted → Green
@@ -18,6 +19,8 @@ class StatusColorUtils {
     switch (status) {
       case LeadStatus.newLead:
         return Colors.blue;
+      case LeadStatus.followUp:
+        return Colors.purple;
       case LeadStatus.inTalk:
         return Colors.orange;
       case LeadStatus.notInterested:
@@ -33,6 +36,8 @@ class StatusColorUtils {
     switch (status) {
       case LeadStatus.newLead:
         return Colors.blue.shade50;
+      case LeadStatus.followUp:
+        return Colors.purple.shade50;
       case LeadStatus.inTalk:
         return Colors.orange.shade50;
       case LeadStatus.notInterested:
@@ -48,6 +53,8 @@ class StatusColorUtils {
     switch (status) {
       case LeadStatus.newLead:
         return Colors.blue.shade700;
+      case LeadStatus.followUp:
+        return Colors.purple.shade700;
       case LeadStatus.inTalk:
         return Colors.orange.shade700;
       case LeadStatus.notInterested:
@@ -62,6 +69,8 @@ class StatusColorUtils {
     switch (status) {
       case LeadStatus.newLead:
         return Colors.blue.shade700;
+      case LeadStatus.followUp:
+        return Colors.purple.shade700;
       case LeadStatus.inTalk:
         return Colors.orange.shade700;
       case LeadStatus.notInterested:

@@ -94,7 +94,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         Text(
                           'Lead Management Portal',
                           style: theme.textTheme.titleMedium?.copyWith(
-                            color: colorScheme.onSurface.withOpacity(0.7),
+                            color: colorScheme.onSurface.withValues(alpha: 0.7),
                             fontWeight: FontWeight.w400,
                           ),
                           textAlign: TextAlign.center,
@@ -103,7 +103,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         Text(
                           'Internal access for authorised team members only',
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurface.withOpacity(0.6),
+                            color: colorScheme.onSurface.withValues(alpha: 0.6),
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -128,13 +128,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(6),
                               borderSide: BorderSide(
-                                color: colorScheme.outline.withOpacity(0.5),
+                                color: colorScheme.outline.withValues(alpha: 0.5),
                               ),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(6),
                               borderSide: BorderSide(
-                                color: colorScheme.outline.withOpacity(0.5),
+                                color: colorScheme.outline.withValues(alpha: 0.5),
                               ),
                             ),
                             focusedBorder: OutlineInputBorder(
@@ -197,7 +197,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 _obscurePassword
                                     ? Icons.visibility_outlined
                                     : Icons.visibility_off_outlined,
-                                color: colorScheme.onSurface.withOpacity(0.6),
+                                color: colorScheme.onSurface.withValues(alpha: 0.6),
                               ),
                               onPressed: () {
                                 setState(() {
@@ -208,13 +208,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(6),
                               borderSide: BorderSide(
-                                color: colorScheme.outline.withOpacity(0.5),
+                                color: colorScheme.outline.withValues(alpha: 0.5),
                               ),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(6),
                               borderSide: BorderSide(
-                                color: colorScheme.outline.withOpacity(0.5),
+                                color: colorScheme.outline.withValues(alpha: 0.5),
                               ),
                             ),
                             focusedBorder: OutlineInputBorder(

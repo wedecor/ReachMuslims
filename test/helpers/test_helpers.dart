@@ -1,11 +1,9 @@
 import 'package:firebase_auth_mocks/firebase_auth_mocks.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../lib/domain/models/user.dart';
 import '../../lib/data/models/user_model.dart';
 import '../../lib/domain/models/lead.dart';
 import '../../lib/data/models/lead_model.dart';
-import '../../lib/domain/models/follow_up.dart';
 import '../../lib/data/models/follow_up_model.dart';
 import '../../lib/domain/models/notification.dart';
 import '../../lib/data/models/notification_model.dart';

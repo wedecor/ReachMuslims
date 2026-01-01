@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/lead.dart';
 import '../../domain/models/user.dart';
@@ -222,7 +221,7 @@ class _LeadCreateScreenState extends ConsumerState<LeadCreateScreen> {
               const SizedBox(height: 16),
               // Region dropdown
               DropdownButtonFormField<UserRegion>(
-                value: createState.region,
+                initialValue: createState.region,
                 style: TextStyle(color: colorScheme.onSurface),
                 decoration: InputDecoration(
                   labelText: 'Region *',
@@ -258,7 +257,7 @@ class _LeadCreateScreenState extends ConsumerState<LeadCreateScreen> {
               const SizedBox(height: 16),
               // Source dropdown
               DropdownButtonFormField<LeadSource>(
-                value: createState.source,
+                initialValue: createState.source,
                 style: TextStyle(color: colorScheme.onSurface),
                 decoration: InputDecoration(
                   labelText: 'Source *',
@@ -283,7 +282,7 @@ class _LeadCreateScreenState extends ConsumerState<LeadCreateScreen> {
               const SizedBox(height: 16),
               // Status dropdown
               DropdownButtonFormField<LeadStatus>(
-                value: createState.status,
+                initialValue: createState.status,
                 style: TextStyle(color: colorScheme.onSurface),
                 decoration: InputDecoration(
                   labelText: 'Status *',
@@ -361,7 +360,7 @@ class _LeadCreateScreenState extends ConsumerState<LeadCreateScreen> {
     final colorScheme = theme.colorScheme;
 
     return DropdownButtonFormField<String?>(
-      value: createState.assignedTo,
+      initialValue: createState.assignedTo,
       style: TextStyle(color: colorScheme.onSurface),
       decoration: InputDecoration(
         labelText: 'Assigned To (optional)',
