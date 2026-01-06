@@ -20,6 +20,11 @@ import '../widgets/lead_tile_info/region_badge.dart';
 import '../widgets/lead_tile_info/lazy_next_scheduled_followup.dart';
 import '../widgets/lead_tile_info/conversion_probability_indicator.dart';
 import '../widgets/lead_tile_info/lazy_last_activity_summary.dart';
+import '../widgets/lead_tile_info/notes_preview.dart';
+import '../widgets/lead_tile_info/status_change_time.dart';
+import '../widgets/lead_tile_info/last_updated_time.dart';
+import '../widgets/lead_tile_info/record_age.dart';
+import '../widgets/lead_tile_info/last_contacted_by_method.dart';
 import '../../domain/models/lead.dart';
 import 'lead_create_screen.dart';
 import 'lead_detail_screen.dart';
@@ -666,33 +671,39 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 ],
               ),
               const SizedBox(height: 8),
-              // Fourth row: Location and Days Since Creation
+              // Fourth row: Location and Record Age
               Row(
                 children: [
                   Expanded(
                     child: LocationDisplay(lead: lead),
                   ),
                   const SizedBox(width: 8),
-                  DaysSinceCreation(lead: lead),
+                  RecordAge(lead: lead),
                 ],
               ),
               const SizedBox(height: 8),
-              // Fifth row: Last Activity and Next Scheduled Follow-up
+              // Notes Preview Row
+              NotesPreview(leadId: lead.id),
+              const SizedBox(height: 8),
+              // Fifth row: Status Change Time and Last Updated
               Row(
                 children: [
                   Expanded(
-                    child: LazyLastActivitySummary(lead: lead),
+                    child: StatusChangeTime(leadId: lead.id, currentStatus: lead.status),
                   ),
                   const SizedBox(width: 8),
-                  LazyNextScheduledFollowUp(leadId: lead.id),
+                  LastUpdatedTime(lead: lead),
                 ],
               ),
               const SizedBox(height: 8),
-              // Sixth row: Conversion Probability Indicator
-              ConversionProbabilityIndicator(lead: lead),
-              // Last contacted indicator (compact)
+              // Sixth row: Last Contacted by Method (Phone/WhatsApp)
+              LastContactedByMethod(lead: lead),
               const SizedBox(height: 8),
-              CompactLastContacted(leadId: lead.id),
+              // Seventh row: Next Scheduled Follow-up
+              LazyNextScheduledFollowUp(leadId: lead.id),
+              const SizedBox(height: 8),
+              // Eighth row: Conversion Probability Indicator
+              ConversionProbabilityIndicator(lead: lead),
               // Bottom action section: Large Call and WhatsApp buttons
               const SizedBox(height: 12),
               LeadCardActionButtons(lead: lead),

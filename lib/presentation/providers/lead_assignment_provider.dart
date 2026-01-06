@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/repositories/lead_repository.dart';
 import '../../core/errors/failures.dart';
+import '../../core/services/activity_logger.dart';
 import 'lead_list_provider.dart';
 import 'auth_provider.dart';
 
@@ -75,7 +77,49 @@ class LeadAssignmentNotifier extends StateNotifier<LeadAssignmentState> {
     state = state.copyWith(isLoading: true, clearError: true);
 
     try {
+      // Get old assignment info for activity log
+      final oldAssignedTo = lead.assignedTo;
+      final oldAssignedToName = lead.assignedToName;
+      
       await _leadRepository.assignLead(_leadId, assignedTo, assignedToName);
+      
+      // Log activity
+      try {
+        final logger = _ref.read(activityLoggerProvider);
+        if (assignedTo == null) {
+          // Unassigned
+          await logger.logUnassigned(
+            leadId: _leadId,
+            performedBy: user.uid,
+            performedByName: user.name,
+            oldAssignee: oldAssignedTo,
+            oldAssigneeName: oldAssignedToName,
+          );
+        } else if (oldAssignedTo == null || oldAssignedTo.isEmpty) {
+          // Assigned (new assignment)
+          await logger.logAssigned(
+            leadId: _leadId,
+            performedBy: user.uid,
+            performedByName: user.name,
+            assignedTo: assignedTo,
+            assignedToName: assignedToName,
+          );
+        } else if (oldAssignedTo != assignedTo) {
+          // Reassigned
+          await logger.logReassigned(
+            leadId: _leadId,
+            performedBy: user.uid,
+            performedByName: user.name,
+            oldAssignee: oldAssignedTo,
+            oldAssigneeName: oldAssignedToName,
+            newAssignee: assignedTo,
+            newAssigneeName: assignedToName,
+          );
+        }
+      } catch (e) {
+        // Don't fail the assignment if activity logging fails
+        debugPrint('Failed to log assignment activity: $e');
+      }
       
       // Refresh lead list to reflect changes
       _ref.read(leadListProvider.notifier).refresh();

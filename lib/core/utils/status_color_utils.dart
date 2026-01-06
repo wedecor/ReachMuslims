@@ -8,6 +8,7 @@ import '../../domain/models/lead.dart';
 /// - New → Blue
 /// - Follow Up → Purple
 /// - In Talk → Orange
+/// - Interested → Teal/Cyan
 /// - Not Interested → Red
 /// - Converted → Green
 class StatusColorUtils {
@@ -23,6 +24,8 @@ class StatusColorUtils {
         return Colors.purple;
       case LeadStatus.inTalk:
         return Colors.orange;
+      case LeadStatus.interested:
+        return Colors.teal;
       case LeadStatus.notInterested:
         return Colors.red;
       case LeadStatus.converted:
@@ -40,6 +43,8 @@ class StatusColorUtils {
         return Colors.purple.shade50;
       case LeadStatus.inTalk:
         return Colors.orange.shade50;
+      case LeadStatus.interested:
+        return Colors.teal.shade50;
       case LeadStatus.notInterested:
         return Colors.red.shade50;
       case LeadStatus.converted:
@@ -57,6 +62,8 @@ class StatusColorUtils {
         return Colors.purple.shade700;
       case LeadStatus.inTalk:
         return Colors.orange.shade700;
+      case LeadStatus.interested:
+        return Colors.teal.shade700;
       case LeadStatus.notInterested:
         return Colors.red.shade700;
       case LeadStatus.converted:
@@ -73,6 +80,8 @@ class StatusColorUtils {
         return Colors.purple.shade700;
       case LeadStatus.inTalk:
         return Colors.orange.shade700;
+      case LeadStatus.interested:
+        return Colors.teal.shade700;
       case LeadStatus.notInterested:
         return Colors.red.shade700;
       case LeadStatus.converted:

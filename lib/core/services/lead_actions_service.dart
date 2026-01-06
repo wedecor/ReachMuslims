@@ -85,9 +85,9 @@ class LeadActionsService {
     final launched = await _launchUri(uri);
 
     if (launched) {
-      // Update lastContactedAt on successful call
+      // Update lastPhoneContactedAt on successful call
       try {
-        await _leadRepository.updateLastContactedAt(lead.id);
+        await _leadRepository.updateLastPhoneContactedAt(lead.id);
       } catch (_) {
         // Silently fail - call was successful, timestamp update is secondary
       }
@@ -122,9 +122,9 @@ class LeadActionsService {
     final launched = await _launchUri(uri);
 
     if (launched) {
-      // Update lastContactedAt on successful WhatsApp launch
+      // Update lastWhatsAppContactedAt on successful WhatsApp launch
       try {
-        await _leadRepository.updateLastContactedAt(lead.id);
+        await _leadRepository.updateLastWhatsAppContactedAt(lead.id);
       } catch (_) {
         // Silently fail - WhatsApp launch was successful, timestamp update is secondary
       }
@@ -178,15 +178,15 @@ class LeadActionsService {
         messagePreview: preview,
       );
 
-      // Update lastContactedAt after successful follow-up log
-      await _leadRepository.updateLastContactedAt(lead.id);
+      // Update lastWhatsAppContactedAt after successful follow-up log
+      await _leadRepository.updateLastWhatsAppContactedAt(lead.id);
 
       return true;
     } catch (_) {
       // WhatsApp was launched but logging failed
-      // Still update lastContactedAt since contact was made
+      // Still update lastWhatsAppContactedAt since contact was made
       try {
-        await _leadRepository.updateLastContactedAt(lead.id);
+        await _leadRepository.updateLastWhatsAppContactedAt(lead.id);
       } catch (_) {
         // Ignore
       }

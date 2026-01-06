@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/follow_up.dart';
 import '../../domain/repositories/follow_up_repository.dart';
 import '../../domain/repositories/lead_repository.dart';
 import '../../data/repositories/follow_up_repository_impl.dart';
 import '../../core/errors/failures.dart';
+import '../../core/services/activity_logger.dart';
 import '../providers/auth_provider.dart';
 import '../providers/connectivity_provider.dart';
 import '../providers/offline_sync_provider.dart';
@@ -168,6 +170,20 @@ class AddFollowUpNotifier extends StateNotifier<AddFollowUpState> {
       }
 
       await _followUpRepository.addFollowUp(_leadId, note, user.uid);
+      
+      // Log activity
+      try {
+        final logger = _ref.read(activityLoggerProvider);
+        await logger.logFollowUpAdded(
+          leadId: _leadId,
+          performedBy: user.uid,
+          performedByName: user.name,
+          note: note,
+        );
+      } catch (e) {
+        // Don't fail the follow-up if activity logging fails
+        debugPrint('Failed to log follow-up activity: $e');
+      }
       
       // Mark as synced if online
       if (connectivityState.isOnline) {

@@ -16,6 +16,8 @@ class LeadModel extends Lead {
     required super.updatedAt,
     super.isPriority,
     super.lastContactedAt,
+    super.lastPhoneContactedAt,
+    super.lastWhatsAppContactedAt,
     super.isDeleted,
     super.source,
   });
@@ -35,6 +37,8 @@ class LeadModel extends Lead {
       updatedAt: (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       isPriority: data['isPriority'] as bool? ?? false,
       lastContactedAt: (data['lastContactedAt'] as Timestamp?)?.toDate(),
+      lastPhoneContactedAt: (data['lastPhoneContactedAt'] as Timestamp?)?.toDate(),
+      lastWhatsAppContactedAt: (data['lastWhatsAppContactedAt'] as Timestamp?)?.toDate(),
       isDeleted: data['isDeleted'] as bool? ?? false,
       source: LeadSource.fromString(data['source'] as String? ?? 'other'),
     );
@@ -53,6 +57,8 @@ class LeadModel extends Lead {
       'updatedAt': Timestamp.fromDate(updatedAt),
       'isPriority': isPriority,
       if (lastContactedAt != null) 'lastContactedAt': Timestamp.fromDate(lastContactedAt!),
+      if (lastPhoneContactedAt != null) 'lastPhoneContactedAt': Timestamp.fromDate(lastPhoneContactedAt!),
+      if (lastWhatsAppContactedAt != null) 'lastWhatsAppContactedAt': Timestamp.fromDate(lastWhatsAppContactedAt!),
       'isDeleted': isDeleted,
       'source': source.name,
     };

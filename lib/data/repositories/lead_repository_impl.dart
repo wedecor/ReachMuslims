@@ -39,9 +39,13 @@ class LeadRepositoryImpl implements LeadRepository {
       if (!isAdmin && userId != null) {
         // Sales users only see their assigned leads
         query = query.where('assignedTo', isEqualTo: userId);
-      } else if (isAdmin && region != null) {
-        // Admin can filter by region
+      }
+
+      // Region filter (admin only, applied independently)
+      if (isAdmin && region != null) {
+        // Filter by region name (should match Firestore field value)
         query = query.where('region', isEqualTo: region.name);
+        debugPrint('Applying region filter: ${region.name}');
       }
 
       // Status filter (multi-select support)
@@ -670,6 +674,42 @@ class LeadRepositoryImpl implements LeadRepository {
       });
     } on FirebaseException catch (e) {
       throw FirestoreFailure('Failed to update last contacted: ${e.message ?? 'Unknown error'}');
+    } catch (e) {
+      if (e is Failure) rethrow;
+      throw FirestoreFailure('Unexpected error: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<void> updateLastPhoneContactedAt(String leadId) async {
+    try {
+      await _firestore
+          .collection(FirebaseConstants.leadsCollection)
+          .doc(leadId)
+          .update({
+        'lastPhoneContactedAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } on FirebaseException catch (e) {
+      throw FirestoreFailure('Failed to update last phone contacted: ${e.message ?? 'Unknown error'}');
+    } catch (e) {
+      if (e is Failure) rethrow;
+      throw FirestoreFailure('Unexpected error: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<void> updateLastWhatsAppContactedAt(String leadId) async {
+    try {
+      await _firestore
+          .collection(FirebaseConstants.leadsCollection)
+          .doc(leadId)
+          .update({
+        'lastWhatsAppContactedAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } on FirebaseException catch (e) {
+      throw FirestoreFailure('Failed to update last WhatsApp contacted: ${e.message ?? 'Unknown error'}');
     } catch (e) {
       if (e is Failure) rethrow;
       throw FirestoreFailure('Unexpected error: ${e.toString()}');

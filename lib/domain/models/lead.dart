@@ -71,6 +71,7 @@ enum LeadStatus {
   newLead,
   followUp,
   inTalk,
+  interested,
   notInterested,
   converted;
 
@@ -90,6 +91,8 @@ enum LeadStatus {
         return 'Follow Up';
       case LeadStatus.inTalk:
         return 'In Talk';
+      case LeadStatus.interested:
+        return 'Interested';
       case LeadStatus.notInterested:
         return 'Not Interested';
       case LeadStatus.converted:
@@ -110,7 +113,9 @@ class Lead {
   final DateTime createdAt;
   final DateTime updatedAt;
   final bool isPriority; // Priority star indicator
-  final DateTime? lastContactedAt; // Last contact timestamp
+  final DateTime? lastContactedAt; // Last contact timestamp (deprecated - use lastPhoneContactedAt or lastWhatsAppContactedAt)
+  final DateTime? lastPhoneContactedAt; // Last phone call timestamp
+  final DateTime? lastWhatsAppContactedAt; // Last WhatsApp message timestamp
   final bool isDeleted; // Soft delete flag
   final LeadSource source; // Lead source (read-only after creation)
 
@@ -127,6 +132,8 @@ class Lead {
     required this.updatedAt,
     this.isPriority = false,
     this.lastContactedAt,
+    this.lastPhoneContactedAt,
+    this.lastWhatsAppContactedAt,
     this.isDeleted = false,
     this.source = LeadSource.other,
   });

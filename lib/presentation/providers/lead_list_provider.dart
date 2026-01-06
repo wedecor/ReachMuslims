@@ -6,6 +6,7 @@ import '../../domain/repositories/follow_up_repository.dart';
 import '../../data/repositories/lead_repository_impl.dart';
 import '../../data/repositories/follow_up_repository_impl.dart';
 import '../../core/errors/failures.dart';
+import '../../core/services/activity_logger.dart';
 import '../providers/auth_provider.dart';
 import '../providers/connectivity_provider.dart';
 import '../providers/offline_sync_provider.dart';
@@ -60,7 +61,15 @@ class LeadListNotifier extends StateNotifier<LeadListState> {
   final LeadRepository _leadRepository;
   final Ref _ref;
 
-  LeadListNotifier(this._leadRepository, this._ref) : super(const LeadListState());
+  LeadListNotifier(this._leadRepository, this._ref) : super(const LeadListState()) {
+    // Watch filter changes and auto-refresh when filters change
+    _ref.listen<LeadFilterState>(leadFilterProvider, (previous, next) {
+      // Refresh leads when filter state changes (avoid during initial load)
+      if (previous != next && !state.isLoading && !state.isLoadingMore) {
+        refresh();
+      }
+    });
+  }
 
   Future<List<Lead>> _applyFollowUpFilter(
     List<Lead> leads,
@@ -201,6 +210,21 @@ class LeadListNotifier extends StateNotifier<LeadListState> {
         lastDocumentId: refresh ? null : state.lastDocumentId,
       );
 
+      // Apply region filter in-memory as a fallback (in case Firestore query doesn't work correctly)
+      if (isAdmin && filterState.region != null) {
+        final beforeCount = leads.length;
+        final regionFilter = filterState.region!;
+        leads = leads.where((lead) {
+          final matches = lead.region == regionFilter;
+          if (!matches) {
+            debugPrint('Lead ${lead.id} (${lead.name}) region: ${lead.region.name}, filter: ${regionFilter.name} - EXCLUDED');
+          }
+          return matches;
+        }).toList();
+        final afterCount = leads.length;
+        debugPrint('Region filter: ${regionFilter.name}, leads before: $beforeCount, after: $afterCount');
+      }
+
       // Apply follow-up filter (in-memory)
       if (filterState.followUpFilter != FollowUpFilter.all) {
         leads = await _applyFollowUpFilter(leads, filterState.followUpFilter);
@@ -254,6 +278,10 @@ class LeadListNotifier extends StateNotifier<LeadListState> {
 
   Future<void> updateStatus(String leadId, LeadStatus status) async {
     try {
+      // Get old status for activity log
+      final oldLead = state.leads.firstWhere((l) => l.id == leadId, orElse: () => throw Exception('Lead not found'));
+      final oldStatus = oldLead.status;
+      
       // Optimistic update
       final updatedLeads = state.leads.map((lead) {
         if (lead.id == leadId) {
@@ -283,6 +311,26 @@ class LeadListNotifier extends StateNotifier<LeadListState> {
 
       // Update in Firestore (will queue if offline)
       await _leadRepository.updateLeadStatus(leadId, status);
+
+      // Log activity (only if status actually changed)
+      if (oldStatus != status) {
+        try {
+          final authState = _ref.read(authProvider);
+          if (authState.user != null) {
+            final logger = _ref.read(activityLoggerProvider);
+            await logger.logStatusChanged(
+              leadId: leadId,
+              performedBy: authState.user!.uid,
+              performedByName: authState.user!.name,
+              oldStatus: oldStatus.name,
+              newStatus: status.name,
+            );
+          }
+        } catch (e) {
+          // Don't fail the status update if activity logging fails
+          debugPrint('Failed to log status change activity: $e');
+        }
+      }
 
       // Mark as synced if online
       if (connectivityState.isOnline) {

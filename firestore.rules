@@ -150,6 +150,25 @@ service cloud.firestore {
     }
     
     // ====================================================
+    // LEAD ACTIVITIES COLLECTION
+    // ====================================================
+    match /lead_activities/{activityId} {
+      // LIST: Allow authenticated users (app layer enforces security)
+      // Users can only access activities for leads they can see
+      allow list: if isAuthenticated();
+      
+      // GET: Allow authenticated users (security enforced by lead access)
+      allow get: if isAuthenticated();
+      
+      // CREATE: Allow authenticated users (app layer enforces permissions)
+      // Activities are created when users perform actions on leads they have access to
+      allow create: if isAuthenticated();
+      
+      // No updates or deletes (append-only audit trail)
+      allow update, delete: if false;
+    }
+    
+    // ====================================================
     // NOTIFICATIONS COLLECTION
     // ====================================================
     match /notifications/{notificationId} {

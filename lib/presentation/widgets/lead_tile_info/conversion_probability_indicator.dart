@@ -19,6 +19,8 @@ class ConversionProbabilityIndicator extends StatelessWidget {
         return 0.40;
       case LeadStatus.inTalk:
         return 0.60;
+      case LeadStatus.interested:
+        return 0.75;
       case LeadStatus.notInterested:
         return 0.0;
       case LeadStatus.converted:

@@ -72,47 +72,43 @@ class _LeadFilterPanelState extends ConsumerState<LeadFilterPanel> {
             const Divider(height: 1),
             ConstrainedBox(
               constraints: BoxConstraints(
-                maxHeight: MediaQuery.of(context).size.height * 0.5,
+                maxHeight: MediaQuery.of(context).size.height * 0.32,
               ),
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                  // Status Filter (Multi-select)
-                  _buildStatusFilter(filterState),
-                  const SizedBox(height: 16),
-                  // Assigned User Filter (Admin only)
-                  if (isAdmin && user?.region != null)
-                    _buildAssignedUserFilter(user!.region!),
-                  if (isAdmin && user?.region != null)
-                    const SizedBox(height: 16),
-                  // Region Filter (Admin only)
-                  if (isAdmin) _buildRegionFilter(filterState),
-                  if (isAdmin) const SizedBox(height: 16),
-                  // Date Range Filter with Presets
-                  _buildDateRangeFilter(filterState),
-                  const SizedBox(height: 16),
-                  // Follow-up Filter
-                  _buildFollowUpFilter(filterState),
-                  const SizedBox(height: 16),
-                  // Priority Filter (moved to main panel, but keep here for consistency)
-                  // Note: Priority filter is now in the main dashboard row
-                      // Clear Filters Button
-                      if (filterState.hasFilters)
-                        OutlinedButton.icon(
-                          onPressed: () {
-                            ref.read(leadFilterProvider.notifier).clearFilters();
-                            ref.read(leadListProvider.notifier).refresh();
-                          },
-                          icon: const Icon(Icons.clear_all, size: 18),
-                          label: const Text('Clear All Filters'),
-                        ),
-                    ],
-                  ),
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Status Filter (Multi-select)
+                    _buildStatusFilter(filterState),
+                    const SizedBox(height: 12),
+                    // Assigned User Filter (Admin only)
+                    if (isAdmin)
+                      _buildAssignedUserFilter(isAdmin: isAdmin),
+                    if (isAdmin)
+                      const SizedBox(height: 12),
+                    // Region Filter (Admin only)
+                    if (isAdmin) _buildRegionFilter(filterState),
+                    if (isAdmin) const SizedBox(height: 12),
+                    // Date Range Filter with Presets
+                    _buildDateRangeFilter(filterState),
+                    const SizedBox(height: 12),
+                    // Follow-up Filter
+                    _buildFollowUpFilter(filterState),
+                    const SizedBox(height: 12),
+                    // Clear Filters Button
+                    if (filterState.hasFilters)
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          ref.read(leadFilterProvider.notifier).clearFilters();
+                          ref.read(leadListProvider.notifier).refresh();
+                        },
+                        icon: const Icon(Icons.clear_all, size: 18),
+                        label: const Text('Clear All Filters'),
+                      ),
+                  ],
                 ),
               ),
             ),
@@ -175,11 +171,19 @@ class _LeadFilterPanelState extends ConsumerState<LeadFilterPanel> {
     );
   }
 
-  Widget _buildAssignedUserFilter(UserRegion region) {
-    final userListState = ref.watch(userListProvider(region));
+  Widget _buildAssignedUserFilter({required bool isAdmin}) {
+    // For admins, show all active users. For sales, show users from their region
+    final authState = ref.watch(authProvider);
+    final currentUser = authState.user;
+    final userListState = isAdmin
+        ? ref.watch(allActiveUsersProvider)
+        : (currentUser?.region != null
+            ? ref.watch(userListProvider(currentUser!.region!))
+            : const UserListState());
+    final filterState = ref.watch(leadFilterProvider);
 
     return DropdownButtonFormField<String?>(
-      initialValue: ref.watch(leadFilterProvider).assignedTo,
+      value: filterState.assignedTo,
       decoration: InputDecoration(
         labelText: 'Assigned To',
         border: const OutlineInputBorder(),
@@ -214,7 +218,7 @@ class _LeadFilterPanelState extends ConsumerState<LeadFilterPanel> {
 
   Widget _buildRegionFilter(LeadFilterState filterState) {
     return DropdownButtonFormField<UserRegion?>(
-      initialValue: filterState.region,
+      value: filterState.region,
       decoration: InputDecoration(
         labelText: 'Region',
         border: const OutlineInputBorder(),
@@ -364,7 +368,7 @@ class _LeadFilterPanelState extends ConsumerState<LeadFilterPanel> {
 
   Widget _buildFollowUpFilter(LeadFilterState filterState) {
     return DropdownButtonFormField<FollowUpFilter>(
-      initialValue: filterState.followUpFilter,
+      value: filterState.followUpFilter,
       decoration: InputDecoration(
         labelText: 'Follow-up Status',
         border: const OutlineInputBorder(),

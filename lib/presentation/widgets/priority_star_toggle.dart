@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/lead.dart';
@@ -8,6 +9,7 @@ import '../providers/offline_sync_provider.dart';
 import '../../domain/repositories/lead_repository.dart';
 import '../../data/repositories/lead_repository_impl.dart';
 import '../../core/errors/failures.dart';
+import '../../core/services/activity_logger.dart';
 
 final leadRepositoryProvider = Provider<LeadRepository>((ref) {
   return LeadRepositoryImpl();
@@ -83,6 +85,20 @@ class _PriorityStarToggleState extends ConsumerState<PriorityStarToggle> {
 
       final leadRepository = ref.read(leadRepositoryProvider);
       await leadRepository.updatePriority(widget.lead.id, _optimisticPriority);
+
+      // Log activity
+      try {
+        final logger = ref.read(activityLoggerProvider);
+        await logger.logPriorityChanged(
+          leadId: widget.lead.id,
+          performedBy: user.uid,
+          performedByName: user.name,
+          isPriority: _optimisticPriority,
+        );
+      } catch (e) {
+        // Don't fail the priority update if activity logging fails
+        debugPrint('Failed to log priority change activity: $e');
+      }
 
       // Mark as synced if online
       if (connectivityState.isOnline) {

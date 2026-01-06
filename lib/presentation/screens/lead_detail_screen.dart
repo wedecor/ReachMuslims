@@ -12,6 +12,7 @@ import '../widgets/priority_star_toggle.dart';
 import '../widgets/last_contacted_indicator.dart';
 import '../widgets/follow_up_timeline_widget.dart';
 import '../widgets/lead_edit_history_timeline_widget.dart';
+import '../widgets/lead_activity_timeline_widget.dart';
 import '../widgets/status_dropdown.dart';
 import '../../core/utils/phone_number_formatter.dart';
 import '../providers/scheduled_followup_provider.dart';
@@ -275,14 +276,18 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
                 );
               },
             ),
-          // History Tabs (Follow-ups and Edit History)
+          // History Tabs (Activity Timeline, Follow-ups, and Edit History)
           Expanded(
             child: DefaultTabController(
-              length: 2,
+              length: 3,
               child: Column(
                 children: [
                   TabBar(
                     tabs: const [
+                      Tab(
+                        icon: Icon(Icons.timeline),
+                        text: 'Activity',
+                      ),
                       Tab(
                         icon: Icon(Icons.history),
                         text: 'Follow-ups',
@@ -298,6 +303,8 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
                   Expanded(
                     child: TabBarView(
                       children: [
+                        // Activity Timeline (Complete History)
+                        LeadActivityTimelineWidget(leadId: widget.lead.id),
                         // Follow-Up History Timeline
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,

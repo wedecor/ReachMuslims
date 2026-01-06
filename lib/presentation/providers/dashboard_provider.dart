@@ -11,6 +11,7 @@ class DashboardStats {
   final int totalLeads;
   final int newLeads;
   final int inTalkLeads;
+  final int interestedLeads;
   final int convertedLeads;
   final int notInterestedLeads;
   final int indiaLeads;
@@ -28,6 +29,7 @@ class DashboardStats {
     this.totalLeads = 0,
     this.newLeads = 0,
     this.inTalkLeads = 0,
+    this.interestedLeads = 0,
     this.convertedLeads = 0,
     this.notInterestedLeads = 0,
     this.indiaLeads = 0,
@@ -46,6 +48,7 @@ class DashboardStats {
     int? totalLeads,
     int? newLeads,
     int? inTalkLeads,
+    int? interestedLeads,
     int? convertedLeads,
     int? notInterestedLeads,
     int? indiaLeads,
@@ -64,6 +67,7 @@ class DashboardStats {
       totalLeads: totalLeads ?? this.totalLeads,
       newLeads: newLeads ?? this.newLeads,
       inTalkLeads: inTalkLeads ?? this.inTalkLeads,
+      interestedLeads: interestedLeads ?? this.interestedLeads,
       convertedLeads: convertedLeads ?? this.convertedLeads,
       notInterestedLeads: notInterestedLeads ?? this.notInterestedLeads,
       indiaLeads: indiaLeads ?? this.indiaLeads,
@@ -136,6 +140,12 @@ class DashboardNotifier extends StateNotifier<DashboardStats> {
         _leadRepository.getLeadsCountByStatus(
           userId: userId,
           isAdmin: isAdmin,
+          status: LeadStatus.interested,
+          region: region,
+        ),
+        _leadRepository.getLeadsCountByStatus(
+          userId: userId,
+          isAdmin: isAdmin,
           status: LeadStatus.converted,
           region: region,
         ),
@@ -200,22 +210,23 @@ class DashboardNotifier extends StateNotifier<DashboardStats> {
 
       // Pending follow-ups: approximation (total - follow-up leads)
       // This is a rough estimate - exact count would require checking all follow-up histories
-      final pendingFollowUps = results[0] > results[10] 
-          ? (results[0] - results[10]).clamp(0, results[0])
+      final pendingFollowUps = results[0] > results[12] 
+          ? (results[0] - results[12]).clamp(0, results[0])
           : 0;
 
       state = DashboardStats(
         totalLeads: results[0],
         newLeads: results[1],
-        inTalkLeads: results[3], // Updated index after adding followUp status
-        convertedLeads: results[4], // Updated index after adding followUp status
-        notInterestedLeads: results[5], // Updated index after adding followUp status
-        indiaLeads: results[6], // Updated index after adding followUp status
-        usaLeads: results[7], // Updated index after adding followUp status
-        leadsToday: results[8], // Updated index after adding followUp status
-        leadsThisWeek: results[9], // Updated index after adding followUp status
-        priorityLeads: results[10], // Updated index after adding followUp status
-        followUpLeads: results[11], // Updated index after adding followUp status
+        inTalkLeads: results[3], // newLead[1], followUp[2], inTalk[3]
+        interestedLeads: results[4], // interested[4]
+        convertedLeads: results[5], // converted[5]
+        notInterestedLeads: results[6], // notInterested[6]
+        indiaLeads: results[7], // india[7]
+        usaLeads: results[8], // usa[8]
+        leadsToday: results[9], // leadsToday[9]
+        leadsThisWeek: results[10], // leadsThisWeek[10]
+        priorityLeads: results[11], // priorityLeads[11]
+        followUpLeads: results[12], // followUpLeads[12]
         leadsContactedToday: leadsContactedToday,
         pendingFollowUps: pendingFollowUps,
         isLoading: false,

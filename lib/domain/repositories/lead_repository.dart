@@ -84,7 +84,9 @@ abstract class LeadRepository {
   });
 
   Future<void> updatePriority(String leadId, bool isPriority);
-  Future<void> updateLastContactedAt(String leadId);
+  Future<void> updateLastContactedAt(String leadId); // Deprecated - use updateLastPhoneContactedAt or updateLastWhatsAppContactedAt
+  Future<void> updateLastPhoneContactedAt(String leadId);
+  Future<void> updateLastWhatsAppContactedAt(String leadId);
   
   /// Update lead basic details (name, phone, location)
   /// Only updates the specified fields, preserves all other fields

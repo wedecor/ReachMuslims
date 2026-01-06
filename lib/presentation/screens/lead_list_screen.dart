@@ -21,6 +21,11 @@ import '../widgets/lead_tile_info/region_badge.dart';
 import '../widgets/lead_tile_info/lazy_next_scheduled_followup.dart';
 import '../widgets/lead_tile_info/conversion_probability_indicator.dart';
 import '../widgets/lead_tile_info/lazy_last_activity_summary.dart';
+import '../widgets/lead_tile_info/notes_preview.dart';
+import '../widgets/lead_tile_info/status_change_time.dart';
+import '../widgets/lead_tile_info/last_updated_time.dart';
+import '../widgets/lead_tile_info/record_age.dart';
+import '../widgets/lead_tile_info/last_contacted_by_method.dart';
 import 'lead_create_screen.dart';
 import 'lead_detail_screen.dart';
 import '../../core/utils/phone_number_formatter.dart';
@@ -42,13 +47,15 @@ class _LeadListScreenState extends ConsumerState<LeadListScreen>
     ScrollController(),
     ScrollController(),
     ScrollController(),
+    ScrollController(),
+    ScrollController(),
   ];
   late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 6, vsync: this);
     for (final controller in _scrollControllers) {
       controller.addListener(() => _onScroll(controller));
     }
@@ -63,6 +70,96 @@ class _LeadListScreenState extends ConsumerState<LeadListScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(leadListProvider.notifier).loadLeads(refresh: true);
     });
+  }
+
+  void _autoSwitchToTabWithLeads(LeadListState leadListState, LeadFilterState filterState) {
+    // Auto-switch if any filters are active
+    if (!filterState.hasFilters) return;
+    
+    // If status filter is active and only one status is selected, switch to that tab
+    if (filterState.statuses.isNotEmpty && filterState.statuses.length == 1) {
+      final selectedStatus = filterState.statuses.first;
+      final statusTabs = [
+        LeadStatus.newLead,
+        LeadStatus.inTalk,
+        LeadStatus.followUp,
+        LeadStatus.interested,
+        LeadStatus.notInterested,
+        LeadStatus.converted,
+      ];
+      final tabIndex = statusTabs.indexOf(selectedStatus);
+      if (tabIndex != -1 && tabIndex != _tabController.index) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && _tabController.index != tabIndex) {
+            _tabController.animateTo(tabIndex);
+          }
+        });
+        return;
+      }
+    }
+    
+    // For other filters, check which tab has leads
+    final hasNonStatusFilters = filterState.region != null ||
+        filterState.assignedTo != null ||
+        (filterState.searchQuery != null && filterState.searchQuery!.isNotEmpty) ||
+        filterState.createdFrom != null ||
+        filterState.createdTo != null ||
+        filterState.followUpFilter != FollowUpFilter.all ||
+        filterState.isPriority != null;
+    
+    if (!hasNonStatusFilters) return;
+
+    final statusTabs = [
+      LeadStatus.newLead,
+      LeadStatus.followUp,
+      LeadStatus.interested,
+      LeadStatus.inTalk,
+      LeadStatus.notInterested,
+      LeadStatus.converted,
+    ];
+
+    // Count leads per status after applying filters
+    final leadsPerStatus = <LeadStatus, int>{};
+    var allFilteredLeads = leadListState.leads;
+
+    // Apply region filter if active
+    if (filterState.region != null) {
+      allFilteredLeads = allFilteredLeads.where((lead) => lead.region == filterState.region).toList();
+    }
+    if (filterState.assignedTo != null) {
+      allFilteredLeads = allFilteredLeads.where((lead) => lead.assignedTo == filterState.assignedTo).toList();
+    }
+    if (filterState.isPriority != null) {
+      allFilteredLeads = allFilteredLeads.where((lead) => lead.isPriority == filterState.isPriority).toList();
+    }
+
+    // Count leads per status
+    for (final status in statusTabs) {
+      leadsPerStatus[status] = allFilteredLeads.where((lead) => lead.status == status).length;
+    }
+
+    // Check current tab - if it has leads, don't switch
+    final currentStatus = statusTabs[_tabController.index];
+    final currentTabLeadsCount = leadsPerStatus[currentStatus] ?? 0;
+    
+    // If current tab has leads, stay on it
+    if (currentTabLeadsCount > 0) return;
+
+    // Find the first tab with leads (prioritize New, Follow Up, In Talk, Converted)
+    for (final status in statusTabs) {
+      final count = leadsPerStatus[status] ?? 0;
+      if (count > 0) {
+        final tabIndex = statusTabs.indexOf(status);
+        if (tabIndex != -1 && tabIndex != _tabController.index) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted && _tabController.index != tabIndex) {
+              _tabController.animateTo(tabIndex);
+            }
+          });
+        }
+        return;
+      }
+    }
   }
 
   @override
@@ -87,6 +184,14 @@ class _LeadListScreenState extends ConsumerState<LeadListScreen>
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
     final leadListState = ref.watch(leadListProvider);
+    final filterState = ref.watch(leadFilterProvider);
+
+    // Auto-switch to tab with leads when filters change and leads are loaded
+    if (!leadListState.isLoading && leadListState.leads.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _autoSwitchToTabWithLeads(leadListState, filterState);
+      });
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -195,8 +300,10 @@ class _LeadListScreenState extends ConsumerState<LeadListScreen>
             controller: _tabController,
             tabs: const [
               Tab(text: 'New'),
-              Tab(text: 'Follow Up'),
               Tab(text: 'In Talk'),
+              Tab(text: 'Follow Up'),
+              Tab(text: 'Interested'),
+              Tab(text: 'Not Interested'),
               Tab(text: 'Converted'),
             ],
             labelColor: Theme.of(context).colorScheme.primary,
@@ -209,9 +316,11 @@ class _LeadListScreenState extends ConsumerState<LeadListScreen>
               controller: _tabController,
               children: [
                 _buildFilteredLeadList(leadListState, LeadStatus.newLead, _scrollControllers[0]),
-                _buildFilteredLeadList(leadListState, LeadStatus.followUp, _scrollControllers[1]),
-                _buildFilteredLeadList(leadListState, LeadStatus.inTalk, _scrollControllers[2]),
-                _buildFilteredLeadList(leadListState, LeadStatus.converted, _scrollControllers[3]),
+                _buildFilteredLeadList(leadListState, LeadStatus.inTalk, _scrollControllers[1]),
+                _buildFilteredLeadList(leadListState, LeadStatus.followUp, _scrollControllers[2]),
+                _buildFilteredLeadList(leadListState, LeadStatus.interested, _scrollControllers[3]),
+                _buildFilteredLeadList(leadListState, LeadStatus.notInterested, _scrollControllers[4]),
+                _buildFilteredLeadList(leadListState, LeadStatus.converted, _scrollControllers[5]),
               ],
             ),
           ),
@@ -225,15 +334,64 @@ class _LeadListScreenState extends ConsumerState<LeadListScreen>
     LeadStatus status,
     ScrollController scrollController,
   ) {
-    // Filter leads by status
-    // Note: Search is already applied in the repository, so we just filter by status here
-    final filteredLeads = state.leads.where((lead) => lead.status == status).toList();
+    // Get current filter state to check if any filters are active
+    final filterState = ref.watch(leadFilterProvider);
+    
+    // If ANY filter is active (except status filter in panel), show ALL matching leads
+    // This prevents confusion: "I filtered by region, show me all leads in that region"
+    // If NO filters are active, use tab status filtering
+    List<Lead> filteredLeads;
+    
+    // Start with all leads from state
+    filteredLeads = state.leads;
+    
+    // Apply region filter if active
+    if (filterState.region != null) {
+      filteredLeads = filteredLeads.where((lead) => lead.region == filterState.region).toList();
+    }
+    
+    // Apply assignedTo filter if active
+    if (filterState.assignedTo != null) {
+      filteredLeads = filteredLeads.where((lead) => lead.assignedTo == filterState.assignedTo).toList();
+    }
+    
+    // Apply priority filter if active
+    if (filterState.isPriority != null) {
+      filteredLeads = filteredLeads.where((lead) => lead.isPriority == filterState.isPriority).toList();
+    }
+    
+    // Apply status filtering
+    if (filterState.statuses.isNotEmpty) {
+      // Status filter is active in filter panel - show leads that match BOTH:
+      // 1. The filter panel status selection
+      // 2. The current tab's status
+      // This ensures leads are segregated properly
+      filteredLeads = filteredLeads.where((lead) => 
+        filterState.statuses.contains(lead.status) && lead.status == status
+      ).toList();
+    } else {
+      // No status filter in panel - use tab status (segregate by tabs)
+      filteredLeads = filteredLeads.where((lead) => lead.status == status).toList();
+    }
 
     if (state.isLoading && filteredLeads.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (state.error != null && filteredLeads.isEmpty) {
+    // Only show error if we have an actual error AND this tab should have data
+    // If status filter is active and this tab's status is not in the filter, show empty state instead of error
+    bool shouldShowError = false;
+    if (state.error != null && filteredLeads.isEmpty && !state.isLoading) {
+      if (filterState.statuses.isNotEmpty) {
+        // Status filter is active - only show error if this tab's status is in the filter
+        shouldShowError = filterState.statuses.contains(status);
+      } else {
+        // No status filter - this tab should show data, so show error if there is one
+        shouldShowError = true;
+      }
+    }
+
+    if (shouldShowError) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -267,18 +425,32 @@ class _LeadListScreenState extends ConsumerState<LeadListScreen>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.inbox_outlined,
+              filterState.hasFilters ? Icons.filter_alt_off : Icons.inbox_outlined,
               size: 64,
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
             const SizedBox(height: 16),
             Text(
-              'No ${status.displayName} leads found',
+              filterState.hasFilters
+                  ? 'No leads found matching the selected filters'
+                  : 'No ${status.displayName} leads found',
               style: TextStyle(
                 fontSize: 16,
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
+              textAlign: TextAlign.center,
             ),
+            if (filterState.hasFilters)
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: TextButton(
+                  onPressed: () {
+                    ref.read(leadFilterProvider.notifier).clearFilters();
+                    ref.read(leadListProvider.notifier).refresh();
+                  },
+                  child: const Text('Clear Filters'),
+                ),
+              ),
           ],
         ),
       );
@@ -387,33 +559,39 @@ class _LeadListScreenState extends ConsumerState<LeadListScreen>
                   ],
                 ),
                 const SizedBox(height: 8),
-                // Fourth row: Location and Days Since Creation
+                // Fourth row: Location and Record Age
                 Row(
                   children: [
                     Expanded(
                       child: LocationDisplay(lead: lead),
                     ),
                     const SizedBox(width: 8),
-                    DaysSinceCreation(lead: lead),
+                    RecordAge(lead: lead),
                   ],
                 ),
                 const SizedBox(height: 8),
-                // Fifth row: Last Activity and Next Scheduled Follow-up
+                // Notes Preview Row
+                NotesPreview(leadId: lead.id),
+                const SizedBox(height: 8),
+                // Fifth row: Status Change Time and Last Updated
                 Row(
                   children: [
-                  Expanded(
-                    child: LazyLastActivitySummary(lead: lead),
-                  ),
-                  const SizedBox(width: 8),
-                  LazyNextScheduledFollowUp(leadId: lead.id),
+                    Expanded(
+                      child: StatusChangeTime(leadId: lead.id, currentStatus: lead.status),
+                    ),
+                    const SizedBox(width: 8),
+                    LastUpdatedTime(lead: lead),
                   ],
                 ),
                 const SizedBox(height: 8),
-                // Sixth row: Conversion Probability Indicator
-                ConversionProbabilityIndicator(lead: lead),
-                // Last contacted indicator (compact)
+                // Sixth row: Last Contacted by Method (Phone/WhatsApp)
+                LastContactedByMethod(lead: lead),
                 const SizedBox(height: 8),
-                CompactLastContacted(leadId: lead.id),
+                // Seventh row: Next Scheduled Follow-up
+                LazyNextScheduledFollowUp(leadId: lead.id),
+                const SizedBox(height: 8),
+                // Eighth row: Conversion Probability Indicator
+                ConversionProbabilityIndicator(lead: lead),
                 // Bottom action section: Large Call and WhatsApp buttons
                 const SizedBox(height: 12),
                 LeadCardActionButtons(lead: lead),

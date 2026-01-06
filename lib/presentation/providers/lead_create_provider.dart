@@ -1,9 +1,12 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/lead.dart';
 import '../../domain/models/user.dart';
 import '../../domain/repositories/lead_repository.dart';
 import '../../core/errors/failures.dart';
+import '../../core/services/activity_logger.dart';
 import 'lead_list_provider.dart';
+import 'auth_provider.dart';
 
 class LeadCreateState {
   final String name;
@@ -83,8 +86,9 @@ class LeadCreateState {
 
 class LeadCreateNotifier extends StateNotifier<LeadCreateState> {
   final LeadRepository _leadRepository;
+  final Ref _ref;
 
-  LeadCreateNotifier(this._leadRepository) : super(const LeadCreateState());
+  LeadCreateNotifier(this._leadRepository, this._ref) : super(const LeadCreateState());
 
   void setName(String name) {
     state = state.copyWith(name: name, clearError: true);
@@ -151,6 +155,24 @@ class LeadCreateNotifier extends StateNotifier<LeadCreateState> {
       );
 
       final createdLead = await _leadRepository.createLead(lead);
+      
+      // Log activity
+      try {
+        final authState = _ref.read(authProvider);
+        if (authState.user != null) {
+          final logger = _ref.read(activityLoggerProvider);
+          await logger.logLeadCreated(
+            leadId: createdLead.id,
+            createdBy: authState.user!.uid,
+            createdByName: authState.user!.name,
+            lead: createdLead,
+          );
+        }
+      } catch (e) {
+        // Don't fail the creation if activity logging fails
+        debugPrint('Failed to log lead creation activity: $e');
+      }
+      
       state = state.copyWith(isLoading: false);
       return createdLead;
     } catch (e) {
@@ -165,6 +187,6 @@ class LeadCreateNotifier extends StateNotifier<LeadCreateState> {
 
 final leadCreateProvider = StateNotifierProvider<LeadCreateNotifier, LeadCreateState>((ref) {
   final leadRepository = ref.watch(leadRepositoryProvider);
-  return LeadCreateNotifier(leadRepository);
+  return LeadCreateNotifier(leadRepository, ref);
 });
 
