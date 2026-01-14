@@ -89,9 +89,7 @@ class _LeadFilterPanelState extends ConsumerState<LeadFilterPanel> {
                       _buildAssignedUserFilter(isAdmin: isAdmin),
                     if (isAdmin)
                       const SizedBox(height: 12),
-                    // Region Filter (Admin only)
-                    if (isAdmin) _buildRegionFilter(filterState),
-                    if (isAdmin) const SizedBox(height: 12),
+                    // Region Filter removed for admins - automatically restricted to admin's own region
                     // Date Range Filter with Presets
                     _buildDateRangeFilter(filterState),
                     const SizedBox(height: 12),

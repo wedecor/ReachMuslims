@@ -4,6 +4,7 @@ import '../../domain/models/user.dart';
 import '../../domain/repositories/user_repository.dart';
 import '../../data/repositories/user_repository_impl.dart';
 import '../../core/errors/failures.dart';
+import '../../core/utils/phone_number_formatter.dart';
 
 final teamDirectoryRepositoryProvider = Provider<UserRepository>((ref) {
   return UserRepositoryImpl();
@@ -145,7 +146,7 @@ class UsersScreen extends ConsumerWidget {
                   if (user.phone != null && user.phone!.isNotEmpty) ...[
                     const SizedBox(height: 4),
                     Text(
-                      user.phone!,
+                      PhoneNumberFormatter.formatPhoneNumber(user.phone!, region: user.region),
                       style: TextStyle(
                         fontSize: 12,
                         color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),

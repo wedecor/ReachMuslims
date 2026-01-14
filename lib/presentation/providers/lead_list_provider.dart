@@ -189,6 +189,10 @@ class LeadListNotifier extends StateNotifier<LeadListState> {
     final user = authState.user!;
     final userId = user.uid;
     final isAdmin = user.isAdmin;
+    
+    // For admins, automatically use their own region (mandatory restriction)
+    // For sales users, region filter is not applicable (they only see assigned leads)
+    final effectiveRegion = isAdmin ? user.region : null;
 
     try {
       if (refresh) {
@@ -200,7 +204,7 @@ class LeadListNotifier extends StateNotifier<LeadListState> {
       var leads = await _leadRepository.getLeads(
         userId: userId,
         isAdmin: isAdmin,
-        region: filterState.region,
+        region: effectiveRegion, // Use admin's own region automatically
         statuses: filterState.statuses.isNotEmpty ? filterState.statuses : null,
         assignedTo: filterState.assignedTo,
         searchQuery: filterState.searchQuery,
@@ -211,18 +215,17 @@ class LeadListNotifier extends StateNotifier<LeadListState> {
       );
 
       // Apply region filter in-memory as a fallback (in case Firestore query doesn't work correctly)
-      if (isAdmin && filterState.region != null) {
+      if (isAdmin && effectiveRegion != null) {
         final beforeCount = leads.length;
-        final regionFilter = filterState.region!;
         leads = leads.where((lead) {
-          final matches = lead.region == regionFilter;
+          final matches = lead.region == effectiveRegion;
           if (!matches) {
-            debugPrint('Lead ${lead.id} (${lead.name}) region: ${lead.region.name}, filter: ${regionFilter.name} - EXCLUDED');
+            debugPrint('Lead ${lead.id} (${lead.name}) region: ${lead.region.name}, admin region: ${effectiveRegion.name} - EXCLUDED');
           }
           return matches;
         }).toList();
         final afterCount = leads.length;
-        debugPrint('Region filter: ${regionFilter.name}, leads before: $beforeCount, after: $afterCount');
+        debugPrint('Admin region restriction: ${effectiveRegion.name}, leads before: $beforeCount, after: $afterCount');
       }
 
       // Apply follow-up filter (in-memory)

@@ -9,6 +9,7 @@ import '../../data/repositories/user_repository_impl.dart';
 import '../../domain/repositories/notification_repository.dart';
 import '../../data/repositories/notification_repository_impl.dart';
 import '../../core/errors/failures.dart';
+import '../../core/utils/phone_number_formatter.dart';
 
 final userRepositoryForApprovalProvider = Provider<UserRepository>((ref) {
   return UserRepositoryImpl();
@@ -153,7 +154,7 @@ class _PendingAccessRequestsScreenState extends ConsumerState<PendingAccessReque
                       if (user.phone != null && user.phone!.isNotEmpty) ...[
                         const SizedBox(height: 4),
                         Text(
-                          'Phone: ${user.phone}',
+                          'Phone: ${PhoneNumberFormatter.formatPhoneNumber(user.phone!, region: user.region)}',
                           style: TextStyle(
                             fontSize: 14,
                             color: Theme.of(context).colorScheme.onSurfaceVariant,

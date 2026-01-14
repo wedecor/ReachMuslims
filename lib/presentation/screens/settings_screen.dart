@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
 import '../providers/theme_provider.dart';
 import '../../core/errors/failures.dart';
+import '../../core/utils/phone_number_formatter.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -245,7 +246,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ListTile(
                     leading: const Icon(Icons.phone_outlined),
                     title: const Text('Phone'),
-                    subtitle: Text(user.phone!),
+                    subtitle: Text(
+                      PhoneNumberFormatter.formatPhoneNumber(
+                        user.phone!,
+                        region: user.region,
+                      ),
+                    ),
                   ),
               ],
             ),
