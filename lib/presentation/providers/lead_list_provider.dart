@@ -206,9 +206,12 @@ class LeadListNotifier extends StateNotifier<LeadListState> {
       // When status filter is active, use normal limit since we're filtering by status
       // For loadMore (pagination), also use large batches to load all records efficiently
       final isInitialLoad = refresh || state.lastDocumentId == null;
+      // Use slightly lower limits to ensure mobile compatibility
       final queryLimit = filterState.statuses.isEmpty 
-          ? (isInitialLoad ? 2000 : 1000)  // Initial load: 2000, pagination: 1000
+          ? (isInitialLoad ? 1500 : 800)  // Initial load: 1500, pagination: 800
           : 20;
+      
+      debugPrint('Loading leads - isInitialLoad: $isInitialLoad, queryLimit: $queryLimit, statuses: ${filterState.statuses.map((s) => s.name).toList()}');
       
       var leads = await _leadRepository.getLeads(
         userId: userId,
@@ -222,6 +225,8 @@ class LeadListNotifier extends StateNotifier<LeadListState> {
         limit: queryLimit,
         lastDocumentId: refresh ? null : state.lastDocumentId,
       );
+      
+      debugPrint('Loaded ${leads.length} leads from repository (queryLimit: $queryLimit)');
 
       // Apply region filter in-memory as a fallback (in case Firestore query doesn't work correctly)
       if (isAdmin && effectiveRegion != null) {
@@ -251,6 +256,12 @@ class LeadListNotifier extends StateNotifier<LeadListState> {
       leads = _applySorting(leads, filterState.sortOption);
 
       if (refresh) {
+        final statusCounts = <String, int>{};
+        for (final lead in leads) {
+          statusCounts[lead.status.name] = (statusCounts[lead.status.name] ?? 0) + 1;
+        }
+        debugPrint('Leads loaded by status: $statusCounts');
+        
         state = LeadListState(
           leads: leads,
           isLoading: false,
@@ -259,6 +270,12 @@ class LeadListNotifier extends StateNotifier<LeadListState> {
         );
       } else {
         final updatedLeads = [...state.leads, ...leads];
+        final statusCounts = <String, int>{};
+        for (final lead in updatedLeads) {
+          statusCounts[lead.status.name] = (statusCounts[lead.status.name] ?? 0) + 1;
+        }
+        debugPrint('Total leads after loadMore: ${updatedLeads.length}, by status: $statusCounts');
+        
         state = state.copyWith(
           leads: updatedLeads,
           isLoadingMore: false,
@@ -266,9 +283,10 @@ class LeadListNotifier extends StateNotifier<LeadListState> {
           lastDocumentId: leads.isNotEmpty ? leads.last.id : null,
         );
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       debugPrint('Error loading leads: $e');
-      debugPrint('Stack trace: ${StackTrace.current}');
+      debugPrint('Error type: ${e.runtimeType}');
+      debugPrint('Stack trace: $stackTrace');
       state = state.copyWith(
         isLoading: false,
         isLoadingMore: false,
