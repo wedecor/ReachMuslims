@@ -218,6 +218,7 @@ class LeadRepositoryImpl implements LeadRepository {
         location: lead.location,
         region: lead.region,
         status: lead.status,
+        gender: lead.gender,
         source: lead.source,
         assignedTo: lead.assignedTo,
         assignedToName: lead.assignedToName,
