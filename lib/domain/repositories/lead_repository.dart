@@ -88,7 +88,7 @@ abstract class LeadRepository {
   Future<void> updateLastPhoneContactedAt(String leadId);
   Future<void> updateLastWhatsAppContactedAt(String leadId);
   
-  /// Update lead basic details (name, phone, location)
+  /// Update lead basic details (name, phone, location, gender)
   /// Only updates the specified fields, preserves all other fields
   /// Permission checks: Admin can edit any lead, Sales can edit only assigned leads
   Future<void> updateLead({
@@ -96,6 +96,7 @@ abstract class LeadRepository {
     required String name,
     required String phone,
     String? location,
+    LeadGender? gender,
     required String? userId,
     required bool isAdmin,
   });

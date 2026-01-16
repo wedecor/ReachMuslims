@@ -211,8 +211,6 @@ class LeadListNotifier extends StateNotifier<LeadListState> {
           ? (isInitialLoad ? 1500 : 800)  // Initial load: 1500, pagination: 800
           : 20;
       
-      debugPrint('Loading leads - isInitialLoad: $isInitialLoad, queryLimit: $queryLimit, statuses: ${filterState.statuses.map((s) => s.name).toList()}');
-      
       var leads = await _leadRepository.getLeads(
         userId: userId,
         isAdmin: isAdmin,
@@ -225,21 +223,10 @@ class LeadListNotifier extends StateNotifier<LeadListState> {
         limit: queryLimit,
         lastDocumentId: refresh ? null : state.lastDocumentId,
       );
-      
-      debugPrint('Loaded ${leads.length} leads from repository (queryLimit: $queryLimit)');
 
       // Apply region filter in-memory as a fallback (in case Firestore query doesn't work correctly)
       if (isAdmin && effectiveRegion != null) {
-        final beforeCount = leads.length;
-        leads = leads.where((lead) {
-          final matches = lead.region == effectiveRegion;
-          if (!matches) {
-            debugPrint('Lead ${lead.id} (${lead.name}) region: ${lead.region.name}, admin region: ${effectiveRegion.name} - EXCLUDED');
-          }
-          return matches;
-        }).toList();
-        final afterCount = leads.length;
-        debugPrint('Admin region restriction: ${effectiveRegion.name}, leads before: $beforeCount, after: $afterCount');
+        leads = leads.where((lead) => lead.region == effectiveRegion).toList();
       }
 
       // Apply follow-up filter (in-memory)
@@ -256,12 +243,6 @@ class LeadListNotifier extends StateNotifier<LeadListState> {
       leads = _applySorting(leads, filterState.sortOption);
 
       if (refresh) {
-        final statusCounts = <String, int>{};
-        for (final lead in leads) {
-          statusCounts[lead.status.name] = (statusCounts[lead.status.name] ?? 0) + 1;
-        }
-        debugPrint('Leads loaded by status: $statusCounts');
-        
         state = LeadListState(
           leads: leads,
           isLoading: false,
@@ -270,11 +251,6 @@ class LeadListNotifier extends StateNotifier<LeadListState> {
         );
       } else {
         final updatedLeads = [...state.leads, ...leads];
-        final statusCounts = <String, int>{};
-        for (final lead in updatedLeads) {
-          statusCounts[lead.status.name] = (statusCounts[lead.status.name] ?? 0) + 1;
-        }
-        debugPrint('Total leads after loadMore: ${updatedLeads.length}, by status: $statusCounts');
         
         state = state.copyWith(
           leads: updatedLeads,
@@ -322,10 +298,17 @@ class LeadListNotifier extends StateNotifier<LeadListState> {
             location: lead.location,
             region: lead.region,
             status: status,
+            gender: lead.gender, // Preserve gender
             assignedTo: lead.assignedTo,
             assignedToName: lead.assignedToName,
             createdAt: lead.createdAt,
             updatedAt: DateTime.now(),
+            isPriority: lead.isPriority,
+            lastContactedAt: lead.lastContactedAt,
+            lastPhoneContactedAt: lead.lastPhoneContactedAt,
+            lastWhatsAppContactedAt: lead.lastWhatsAppContactedAt,
+            isDeleted: lead.isDeleted,
+            source: lead.source,
           );
         }
         return lead;

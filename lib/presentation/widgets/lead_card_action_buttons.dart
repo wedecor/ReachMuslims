@@ -193,13 +193,8 @@ class _LeadCardActionButtonsState extends ConsumerState<LeadCardActionButtons> {
     final isCallDisabled = !hasPhone || !isMobile || _isCallLoading || isOffline;
     final isWhatsAppDisabled = !hasPhone || _isWhatsAppLoading || isOffline;
 
-    return Row(
-      children: [
-        // Left button: Call
-        Expanded(
-          child: Tooltip(
-            message: isOffline ? 'Call unavailable offline' : 'Call lead',
-            child: ElevatedButton.icon(
+    // Create buttons - tooltips added in Row to avoid hit-test blocking
+    final callButton = ElevatedButton.icon(
               onPressed: isCallDisabled ? null : () => _handleCall(context, ref),
               icon: _isCallLoading
                   ? SizedBox(
@@ -234,15 +229,9 @@ class _LeadCardActionButtonsState extends ConsumerState<LeadCardActionButtons> {
               ),
               elevation: 0,
             ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        // Right button: WhatsApp (smart: initial or follow-up based on contact history)
-        Expanded(
-          child: Tooltip(
-            message: isOffline ? 'WhatsApp unavailable offline' : 'Open WhatsApp',
-            child: ElevatedButton.icon(
+          );
+
+    final whatsAppButton = ElevatedButton.icon(
               onPressed: isWhatsAppDisabled ? null : () => _handleWhatsApp(context, ref),
               icon: _isWhatsAppLoading
                   ? SizedBox(
@@ -277,7 +266,31 @@ class _LeadCardActionButtonsState extends ConsumerState<LeadCardActionButtons> {
               ),
               elevation: 0,
             ),
-            ),
+          );
+
+    return Row(
+      children: [
+        // Left button: Call
+        Expanded(
+          child: Tooltip(
+            message: isOffline ? 'Call unavailable offline' : 'Call lead',
+            waitDuration: const Duration(milliseconds: 1000),
+            preferBelow: false,
+            enableFeedback: false,
+            excludeFromSemantics: true,
+            child: callButton,
+          ),
+        ),
+        const SizedBox(width: 8),
+        // Right button: WhatsApp (smart: initial or follow-up based on contact history)
+        Expanded(
+          child: Tooltip(
+            message: isOffline ? 'WhatsApp unavailable offline' : 'Open WhatsApp',
+            waitDuration: const Duration(milliseconds: 1000),
+            preferBelow: false,
+            enableFeedback: false,
+            excludeFromSemantics: true,
+            child: whatsAppButton,
           ),
         ),
       ],

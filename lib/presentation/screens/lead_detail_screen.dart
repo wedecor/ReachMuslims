@@ -152,6 +152,35 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
                   Text('Phone: ${PhoneNumberFormatter.formatPhoneNumber(currentLead.phone, region: currentLead.region)}'),
                   if (currentLead.location != null)
                     Text('Location: ${currentLead.location}'),
+                  // Gender display
+                  Row(
+                    children: [
+                      const Text('Gender: '),
+                      Chip(
+                        label: Text(
+                          currentLead.gender.displayName,
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        backgroundColor: currentLead.gender == LeadGender.unknown
+                            ? Theme.of(context).colorScheme.errorContainer
+                            : Theme.of(context).colorScheme.primaryContainer,
+                      ),
+                      if (currentLead.gender == LeadGender.unknown)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 8.0),
+                          child: Text(
+                            '(Please edit to set)',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Theme.of(context).colorScheme.error,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                   // Source label (read-only)
                   Row(
                     children: [

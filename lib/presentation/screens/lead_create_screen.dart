@@ -22,6 +22,7 @@ class _LeadCreateScreenState extends ConsumerState<LeadCreateScreen> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _locationController = TextEditingController();
+  bool _hasAttemptedSubmit = false; // Track if user tried to submit
 
   @override
   void dispose() {
@@ -32,6 +33,9 @@ class _LeadCreateScreenState extends ConsumerState<LeadCreateScreen> {
   }
 
   Future<void> _handleSubmit() async {
+    setState(() {
+      _hasAttemptedSubmit = true; // Mark that validation should be shown
+    });
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -216,6 +220,45 @@ class _LeadCreateScreenState extends ConsumerState<LeadCreateScreen> {
                 ),
                 onChanged: (value) {
                   ref.read(leadCreateProvider.notifier).setLocation(value.isEmpty ? null : value);
+                },
+              ),
+              const SizedBox(height: 16),
+              // Gender dropdown (mandatory - Male or Female only)
+              DropdownButtonFormField<LeadGender>(
+                value: createState.gender,
+                style: TextStyle(color: colorScheme.onSurface),
+                decoration: InputDecoration(
+                  labelText: 'Gender *',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  filled: true,
+                  fillColor: colorScheme.surfaceContainerHighest,
+                  errorText: _hasAttemptedSubmit && createState.validationErrors['gender'] != null
+                      ? createState.validationErrors['gender']
+                      : null,
+                ),
+                items: [
+                  // Only show Male and Female options (not Unknown)
+                  DropdownMenuItem<LeadGender>(
+                    value: LeadGender.male,
+                    child: Text(LeadGender.male.displayName),
+                  ),
+                  DropdownMenuItem<LeadGender>(
+                    value: LeadGender.female,
+                    child: Text(LeadGender.female.displayName),
+                  ),
+                ],
+                onChanged: (gender) {
+                  if (gender != null) {
+                    ref.read(leadCreateProvider.notifier).setGender(gender);
+                  }
+                },
+                validator: (value) {
+                  if (value == null || value == LeadGender.unknown) {
+                    return 'Gender is required (please select Male or Female)';
+                  }
+                  return null;
                 },
               ),
               const SizedBox(height: 16),

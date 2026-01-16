@@ -26,6 +26,7 @@ import '../widgets/lead_tile_info/status_change_time.dart';
 import '../widgets/lead_tile_info/last_updated_time.dart';
 import '../widgets/lead_tile_info/record_age.dart';
 import '../widgets/lead_tile_info/last_contacted_by_method.dart';
+import '../widgets/lead_tile_info/gender_badge.dart';
 import 'lead_create_screen.dart';
 import 'lead_detail_screen.dart';
 import '../../core/utils/phone_number_formatter.dart';
@@ -131,6 +132,9 @@ class _LeadListScreenState extends ConsumerState<LeadListScreen>
     }
     if (filterState.isPriority != null) {
       allFilteredLeads = allFilteredLeads.where((lead) => lead.isPriority == filterState.isPriority).toList();
+    }
+    if (filterState.gender != null) {
+      allFilteredLeads = allFilteredLeads.where((lead) => lead.gender == filterState.gender).toList();
     }
 
     // Count leads per status
@@ -360,6 +364,11 @@ class _LeadListScreenState extends ConsumerState<LeadListScreen>
       filteredLeads = filteredLeads.where((lead) => lead.isPriority == filterState.isPriority).toList();
     }
     
+    // Apply gender filter if active
+    if (filterState.gender != null) {
+      filteredLeads = filteredLeads.where((lead) => lead.gender == filterState.gender).toList();
+    }
+    
     // Apply status filtering
     if (filterState.statuses.isNotEmpty) {
       // Status filter is active in filter panel - show leads that match BOTH:
@@ -561,11 +570,12 @@ class _LeadListScreenState extends ConsumerState<LeadListScreen>
                   ],
                 ),
                 const SizedBox(height: 8),
-                // Third row: Badges (Assigned User, Source, Follow-up Count)
+                // Third row: Badges (Gender, Assigned User, Source, Follow-up Count)
                 Wrap(
                   spacing: 6,
                   runSpacing: 6,
                   children: [
+                    GenderBadge(lead: lead),
                     AssignedUserBadge(lead: lead),
                     LeadSourceBadge(lead: lead),
                     LazyFollowUpCountBadge(leadId: lead.id),

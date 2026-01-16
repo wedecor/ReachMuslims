@@ -67,6 +67,32 @@ enum LeadSource {
   }
 }
 
+enum LeadGender {
+  unknown,
+  male,
+  female;
+
+  static LeadGender fromString(String? value) {
+    if (value == null || value.isEmpty) return LeadGender.unknown;
+    final normalizedValue = value.toLowerCase().trim();
+    return LeadGender.values.firstWhere(
+      (gender) => gender.name.toLowerCase() == normalizedValue,
+      orElse: () => LeadGender.unknown,
+    );
+  }
+
+  String get displayName {
+    switch (this) {
+      case LeadGender.unknown:
+        return 'Unknown';
+      case LeadGender.male:
+        return 'Male';
+      case LeadGender.female:
+        return 'Female';
+    }
+  }
+}
+
 enum LeadStatus {
   newLead,
   followUp,
@@ -108,6 +134,7 @@ class Lead {
   final String? location;
   final UserRegion region;
   final LeadStatus status;
+  final LeadGender gender; // Gender: unknown (default for existing), male, or female
   final String? assignedTo; // User UID
   final String? assignedToName; // User name for display
   final DateTime createdAt;
@@ -126,6 +153,7 @@ class Lead {
     this.location,
     required this.region,
     required this.status,
+    this.gender = LeadGender.unknown, // Default to unknown for backward compatibility
     this.assignedTo,
     this.assignedToName,
     required this.createdAt,

@@ -25,6 +25,7 @@ enum LeadSortOption {
 
 class LeadFilterState {
   final List<LeadStatus> statuses; // Multi-select
+  final LeadGender? gender; // null = all, male = male only, female = female only
   final String? assignedTo;
   final String? searchQuery;
   final UserRegion? region;
@@ -37,6 +38,7 @@ class LeadFilterState {
 
   const LeadFilterState({
     this.statuses = const [],
+    this.gender,
     this.assignedTo,
     this.searchQuery,
     this.region,
@@ -50,6 +52,7 @@ class LeadFilterState {
 
   LeadFilterState copyWith({
     List<LeadStatus>? statuses,
+    LeadGender? gender,
     String? assignedTo,
     String? searchQuery,
     UserRegion? region,
@@ -60,6 +63,7 @@ class LeadFilterState {
     bool? isPriority,
     LeadSortOption? sortOption,
     bool clearStatuses = false,
+    bool clearGender = false,
     bool clearAssignedTo = false,
     bool clearSearchQuery = false,
     bool clearRegion = false,
@@ -69,6 +73,7 @@ class LeadFilterState {
   }) {
     return LeadFilterState(
       statuses: clearStatuses ? const [] : (statuses ?? this.statuses),
+      gender: clearGender ? null : (gender ?? this.gender),
       assignedTo: clearAssignedTo ? null : (assignedTo ?? this.assignedTo),
       searchQuery: clearSearchQuery ? null : (searchQuery ?? this.searchQuery),
       region: clearRegion ? null : (region ?? this.region),
@@ -85,6 +90,7 @@ class LeadFilterState {
 
   bool get hasFilters =>
       statuses.isNotEmpty ||
+      gender != null ||
       assignedTo != null ||
       searchQuery != null ||
       region != null ||
@@ -97,6 +103,7 @@ class LeadFilterState {
   int get activeFilterCount {
     int count = 0;
     if (statuses.isNotEmpty) count++;
+    if (gender != null) count++;
     if (assignedTo != null) count++;
     if (searchQuery != null && searchQuery!.isNotEmpty) count++;
     if (region != null) count++;
@@ -183,6 +190,13 @@ class LeadFilterNotifier extends StateNotifier<LeadFilterState> {
     state = state.copyWith(
       followUpFilter: filter,
       clearFollowUpFilter: filter == FollowUpFilter.all,
+    );
+  }
+
+  void setGender(LeadGender? gender) {
+    state = state.copyWith(
+      gender: gender,
+      clearGender: gender == null,
     );
   }
 

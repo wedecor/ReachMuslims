@@ -84,6 +84,9 @@ class _LeadFilterPanelState extends ConsumerState<LeadFilterPanel> {
                     // Status Filter (Multi-select)
                     _buildStatusFilter(filterState),
                     const SizedBox(height: 12),
+                    // Gender Filter
+                    _buildGenderFilter(filterState),
+                    const SizedBox(height: 12),
                     // Assigned User Filter (Admin only)
                     if (isAdmin)
                       _buildAssignedUserFilter(isAdmin: isAdmin),
@@ -361,6 +364,69 @@ class _LeadFilterPanelState extends ConsumerState<LeadFilterPanel> {
         ref.read(leadFilterProvider.notifier).setDateRangePreset(preset);
         ref.read(leadListProvider.notifier).refresh();
       },
+    );
+  }
+
+  Widget _buildGenderFilter(LeadFilterState filterState) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Gender',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 8),
+        DropdownButtonFormField<LeadGender?>(
+          value: filterState.gender,
+          decoration: InputDecoration(
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            filled: true,
+            fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            isDense: true,
+          ),
+          style: TextStyle(
+            fontSize: 13,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
+          items: [
+            const DropdownMenuItem<LeadGender?>(
+              value: null,
+              child: Text('All'),
+            ),
+            DropdownMenuItem<LeadGender?>(
+              value: LeadGender.male,
+              child: Row(
+                children: [
+                  Icon(Icons.male, size: 18, color: Theme.of(context).colorScheme.primary),
+                  const SizedBox(width: 8),
+                  Text(LeadGender.male.displayName),
+                ],
+              ),
+            ),
+            DropdownMenuItem<LeadGender?>(
+              value: LeadGender.female,
+              child: Row(
+                children: [
+                  Icon(Icons.female, size: 18, color: Theme.of(context).colorScheme.secondary),
+                  const SizedBox(width: 8),
+                  Text(LeadGender.female.displayName),
+                ],
+              ),
+            ),
+          ],
+          onChanged: (gender) {
+            ref.read(leadFilterProvider.notifier).setGender(gender);
+            ref.read(leadListProvider.notifier).refresh();
+          },
+        ),
+      ],
     );
   }
 

@@ -45,7 +45,6 @@ class LeadRepositoryImpl implements LeadRepository {
       if (isAdmin && region != null) {
         // Filter by region name (should match Firestore field value)
         query = query.where('region', isEqualTo: region.name);
-        debugPrint('Applying region filter: ${region.name}');
       }
 
       // Status filter (multi-select support)
@@ -722,6 +721,7 @@ class LeadRepositoryImpl implements LeadRepository {
     required String name,
     required String phone,
     String? location,
+    LeadGender? gender,
     required String? userId,
     required bool isAdmin,
   }) async {
@@ -749,6 +749,11 @@ class LeadRepositoryImpl implements LeadRepository {
         updateData['location'] = FieldValue.delete();
       } else {
         updateData['location'] = location.trim();
+      }
+
+      // Handle gender: if provided, update it (mandatory when editing)
+      if (gender != null) {
+        updateData['gender'] = gender.name;
       }
 
       // Update only the specified fields - preserves all other fields

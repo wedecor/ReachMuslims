@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/repositories/lead_repository.dart';
 import '../../domain/models/lead_edit_history.dart';
+import '../../domain/models/lead.dart';
 import '../../core/errors/failures.dart';
 import '../providers/auth_provider.dart';
 import 'lead_list_provider.dart';
@@ -40,6 +41,7 @@ class LeadEditNotifier extends StateNotifier<LeadEditState> {
     required String name,
     required String phone,
     String? location,
+    LeadGender? gender,
   }) async {
     try {
       final authState = _ref.read(authProvider);
@@ -94,12 +96,21 @@ class LeadEditNotifier extends StateNotifier<LeadEditState> {
         );
       }
 
+      // Handle gender: compare old value with new
+      if (gender != null && currentLead.gender != gender) {
+        changes['gender'] = FieldChange(
+          oldValue: currentLead.gender.displayName,
+          newValue: gender.displayName,
+        );
+      }
+
       // Update the lead
       await _leadRepository.updateLead(
         leadId: _leadId,
         name: trimmedName,
         phone: trimmedPhone,
         location: trimmedLocation,
+        gender: gender,
         userId: user.uid,
         isAdmin: user.isAdmin,
       );

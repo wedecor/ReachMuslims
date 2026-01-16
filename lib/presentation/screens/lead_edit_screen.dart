@@ -23,6 +23,7 @@ class _LeadEditScreenState extends ConsumerState<LeadEditScreen> {
   late final TextEditingController _nameController;
   late final TextEditingController _phoneController;
   late final TextEditingController _locationController;
+  LeadGender? _selectedGender;
 
   @override
   void initState() {
@@ -37,6 +38,8 @@ class _LeadEditScreenState extends ConsumerState<LeadEditScreen> {
     );
     _phoneController = TextEditingController(text: formatted.text);
     _locationController = TextEditingController(text: widget.lead.location ?? '');
+    // Initialize gender - if unknown, default to null to force selection
+    _selectedGender = widget.lead.gender == LeadGender.unknown ? null : widget.lead.gender;
   }
 
   @override
@@ -78,12 +81,26 @@ class _LeadEditScreenState extends ConsumerState<LeadEditScreen> {
     // Extract only digits from formatted phone number
     final phoneDigitsOnly = PhoneNumberValidator.getDigitsOnly(_phoneController.text);
     
+    // Validate gender is selected (must be male or female)
+    if (_selectedGender == null || _selectedGender == LeadGender.unknown) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Gender is required. Please select Male or Female.'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+      return;
+    }
+    
     final success = await ref.read(leadEditProvider(widget.lead.id).notifier).updateLead(
           name: _nameController.text.trim(),
           phone: phoneDigitsOnly,
           location: _locationController.text.trim().isEmpty
               ? null
               : _locationController.text.trim(),
+          gender: _selectedGender!,
         );
 
     if (!mounted) return;
@@ -180,7 +197,14 @@ class _LeadEditScreenState extends ConsumerState<LeadEditScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Note: Only name, phone, and location can be edited.',
+                        'Note: Name, phone, location, and gender can be edited.',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Gender is required (must be Male or Female).',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               color: colorScheme.onSurfaceVariant,
                             ),
@@ -250,6 +274,49 @@ class _LeadEditScreenState extends ConsumerState<LeadEditScreen> {
                   filled: true,
                   fillColor: colorScheme.surfaceContainerHighest,
                 ),
+              ),
+              const SizedBox(height: 16),
+              // Gender dropdown (mandatory - must be Male or Female)
+              DropdownButtonFormField<LeadGender>(
+                value: _selectedGender,
+                style: TextStyle(color: colorScheme.onSurface),
+                decoration: InputDecoration(
+                  labelText: 'Gender *',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  filled: true,
+                  fillColor: colorScheme.surfaceContainerHighest,
+                  helperText: widget.lead.gender == LeadGender.unknown
+                      ? 'Please select gender (required)'
+                      : null,
+                  helperMaxLines: 2,
+                ),
+                items: [
+                  // Only show Male and Female options (not Unknown)
+                  DropdownMenuItem<LeadGender>(
+                    value: LeadGender.male,
+                    child: Text(LeadGender.male.displayName),
+                  ),
+                  DropdownMenuItem<LeadGender>(
+                    value: LeadGender.female,
+                    child: Text(LeadGender.female.displayName),
+                  ),
+                ],
+                onChanged: (gender) {
+                  setState(() {
+                    _selectedGender = gender;
+                  });
+                },
+                validator: (value) {
+                  if (value == null) {
+                    return 'Gender is required (must be Male or Female)';
+                  }
+                  if (value == LeadGender.unknown) {
+                    return 'Gender cannot be Unknown. Please select Male or Female.';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 32),
               // Error message

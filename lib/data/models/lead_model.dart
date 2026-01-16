@@ -10,6 +10,7 @@ class LeadModel extends Lead {
     super.location,
     required super.region,
     required super.status,
+    super.gender,
     super.assignedTo,
     super.assignedToName,
     required super.createdAt,
@@ -31,6 +32,7 @@ class LeadModel extends Lead {
       location: data['location'] as String?,
       region: domain.UserRegion.fromString(data['region'] as String? ?? 'india'),
       status: LeadStatus.fromString(data['status'] as String? ?? 'newLead'),
+      gender: LeadGender.fromString(data['gender'] as String?),
       assignedTo: data['assignedTo'] as String?,
       assignedToName: data['assignedToName'] as String?,
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
@@ -51,6 +53,7 @@ class LeadModel extends Lead {
       if (location != null) 'location': location,
       'region': region.name,
       'status': status.name,
+      'gender': gender.name, // Always include gender (defaults to 'unknown' for existing records)
       if (assignedTo != null) 'assignedTo': assignedTo,
       if (assignedToName != null) 'assignedToName': assignedToName,
       'createdAt': Timestamp.fromDate(createdAt),
