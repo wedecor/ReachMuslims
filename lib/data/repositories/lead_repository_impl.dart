@@ -224,6 +224,11 @@ class LeadRepositoryImpl implements LeadRepository {
         assignedToName: lead.assignedToName,
         createdAt: lead.createdAt,
         updatedAt: lead.updatedAt,
+        isPriority: lead.isPriority,
+        lastContactedAt: lead.lastContactedAt,
+        lastPhoneContactedAt: lead.lastPhoneContactedAt,
+        lastWhatsAppContactedAt: lead.lastWhatsAppContactedAt,
+        isDeleted: lead.isDeleted,
       );
 
       // Create document with auto-generated ID
