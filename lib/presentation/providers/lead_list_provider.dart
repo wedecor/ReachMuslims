@@ -201,6 +201,15 @@ class LeadListNotifier extends StateNotifier<LeadListState> {
         state = state.copyWith(isLoadingMore: true, clearError: true);
       }
 
+      // When no status filter is active, use a very large limit to load all records
+      // Firestore max is ~5000 per query, using 2000 as a safe large batch size
+      // When status filter is active, use normal limit since we're filtering by status
+      // For loadMore (pagination), also use large batches to load all records efficiently
+      final isInitialLoad = refresh || state.lastDocumentId == null;
+      final queryLimit = filterState.statuses.isEmpty 
+          ? (isInitialLoad ? 2000 : 1000)  // Initial load: 2000, pagination: 1000
+          : 20;
+      
       var leads = await _leadRepository.getLeads(
         userId: userId,
         isAdmin: isAdmin,
@@ -210,7 +219,7 @@ class LeadListNotifier extends StateNotifier<LeadListState> {
         searchQuery: filterState.searchQuery,
         createdFrom: filterState.createdFrom,
         createdTo: filterState.createdTo,
-        limit: 20,
+        limit: queryLimit,
         lastDocumentId: refresh ? null : state.lastDocumentId,
       );
 
@@ -245,7 +254,7 @@ class LeadListNotifier extends StateNotifier<LeadListState> {
         state = LeadListState(
           leads: leads,
           isLoading: false,
-          hasMore: leads.length >= 20,
+          hasMore: leads.length >= queryLimit,
           lastDocumentId: leads.isNotEmpty ? leads.last.id : null,
         );
       } else {
@@ -253,7 +262,7 @@ class LeadListNotifier extends StateNotifier<LeadListState> {
         state = state.copyWith(
           leads: updatedLeads,
           isLoadingMore: false,
-          hasMore: leads.length >= 20,
+          hasMore: leads.length >= queryLimit,
           lastDocumentId: leads.isNotEmpty ? leads.last.id : null,
         );
       }

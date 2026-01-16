@@ -420,6 +420,19 @@ class _LeadListScreenState extends ConsumerState<LeadListScreen>
     }
 
     if (filteredLeads.isEmpty) {
+      // If tab is empty but we have more data available and no status filter is active,
+      // aggressively load more data to find leads for this status
+      // This ensures we load all available records across all statuses
+      if (state.hasMore && 
+          !state.isLoading && 
+          !state.isLoadingMore && 
+          filterState.statuses.isEmpty) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          // Load more data in batches until we find leads for this status or run out
+          ref.read(leadListProvider.notifier).loadMore();
+        });
+      }
+      
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
